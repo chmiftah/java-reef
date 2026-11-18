@@ -603,26 +603,28 @@ Total: ${money(t.total, s.currency)}${t.paid ? `\nPaid: ${money(t.paid, s.curren
         </div>
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Description</th>
-            <th class="r">Qty</th>
-            <th class="r">Price</th>
-            <th class="r">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each previewInvoice.items as it}
+      <div class="paper-table-wrap">
+        <table>
+          <thead>
             <tr>
-              <td>{it.desc}</td>
-              <td class="r num">{it.qty}</td>
-              <td class="r num">{money(it.price, s.currency)}</td>
-              <td class="r num">{money(it.qty * it.price, s.currency)}</td>
+              <th>Description</th>
+              <th class="r">Qty</th>
+              <th class="r">Price</th>
+              <th class="r">Amount</th>
             </tr>
-          {/each}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {#each previewInvoice.items as it}
+              <tr>
+                <td>{it.desc}</td>
+                <td class="r num">{it.qty}</td>
+                <td class="r num">{money(it.price, s.currency)}</td>
+                <td class="r num">{money(it.qty * it.price, s.currency)}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
 
       <div class="tot">
         <div><span>Subtotal</span><span class="num">{money(t.sub, s.currency)}</span></div>
@@ -966,7 +968,14 @@ Total: ${money(t.total, s.currency)}${t.paid ? `\nPaid: ${money(t.paid, s.curren
     margin-bottom: 6px;
   }
 
+  .paper-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
   .paper table {
+    width: 100%;
     min-width: 0;
   }
 

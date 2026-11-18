@@ -54,12 +54,21 @@ export function encodeInvoicePayload(inv, customer, settings) {
 export function decodeInvoicePayload(base64) {
   if (!base64) return null;
   try {
-    const json = decodeURIComponent(escape(atob(base64)));
+    // If URLSearchParams converted + to space, revert it, and handle URL-safe base64 (- and _)
+    const clean = base64.trim().replace(/ /g, "+").replace(/-/g, "+").replace(/_/g, "/");
+    const padded = clean.padEnd(clean.length + ((4 - (clean.length % 4)) % 4), "=");
+    const json = decodeURIComponent(escape(atob(padded)));
     const data = JSON.parse(json);
     return data;
   } catch (e) {
-    console.error("Error decoding invoice payload", e);
-    return null;
+    try {
+      // Fallback for raw direct base64
+      const json = decodeURIComponent(escape(atob(base64)));
+      return JSON.parse(json);
+    } catch (e2) {
+      console.error("Error decoding invoice payload", e, e2);
+      return null;
+    }
   }
 }
 
