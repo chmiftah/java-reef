@@ -85,6 +85,14 @@
     <div class="brand">
       <i></i>JAVA REEF
     </div>
+    <div class="mobile-top-actions">
+      <button class="btn btn-sm btn-ghost" type="button" onclick={onBackToWebsite} title="View website">
+        Website →
+      </button>
+      <button class="btn btn-sm" type="button" onclick={() => db.logout()} title="Sign out">
+        Sign out
+      </button>
+    </div>
     <nav>
       {#each VIEWS as v}
         <button
@@ -124,12 +132,16 @@
           class="mnav-link {activeView === v.id ? 'on' : ''}"
           onclick={() => (activeView = v.id)}
         >
-          {v.label}
+          <span>{v.label}</span>
+          {#if v.id === "bookings" && newBookingsCount}
+            <span class="badge">{newBookingsCount}</span>
+          {:else if v.id === "tracker" && overdueInvoicesCount}
+            <span class="badge" style="background:var(--bad);color:#fff">
+              {overdueInvoicesCount}
+            </span>
+          {/if}
         </button>
       {/each}
-      <button type="button" class="mnav-link" onclick={onBackToWebsite}>
-        Website →
-      </button>
     </div>
 
     <main class="main">
@@ -265,6 +277,10 @@
     min-width: 0;
   }
 
+  .mobile-top-actions {
+    display: none;
+  }
+
   .mobile-nav {
     display: none;
   }
@@ -280,6 +296,13 @@
       align-items: center;
       justify-content: space-between;
       padding: 12px 16px;
+      border-right: none;
+      border-bottom: 1px solid var(--line);
+    }
+    .mobile-top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     .side nav,
     .side .me {
@@ -288,23 +311,73 @@
     .mobile-nav {
       display: flex;
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
       gap: 6px;
-      padding: 10px 16px;
+      padding: 10px 14px;
       border-bottom: 1px solid var(--line);
       background: var(--panel);
     }
+    .mobile-nav::-webkit-scrollbar {
+      display: none;
+    }
     .mnav-link {
       flex: none;
-      padding: 8px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
       border-radius: 99px;
       border: 1px solid var(--line);
       color: var(--muted);
       font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      background: rgba(236, 230, 217, 0.02);
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .mnav-link:hover {
+      color: var(--foam);
     }
     .mnav-link.on {
       border-color: var(--reef);
       color: var(--foam);
-      background: rgba(63, 184, 166, 0.12);
+      background: rgba(63, 184, 166, 0.15);
+      font-weight: 600;
+    }
+    .mnav-link .badge {
+      font-size: 10px;
+      padding: 2px 6px;
+    }
+    .main {
+      padding: 20px 14px 44px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .side {
+      padding: 10px 12px;
+    }
+    .brand {
+      font-size: 18px;
+    }
+    .mobile-top-actions {
+      gap: 6px;
+    }
+    .mobile-top-actions .btn {
+      padding: 5px 8px;
+      font-size: 12px;
+    }
+    .mobile-nav {
+      padding: 8px 10px;
+      gap: 5px;
+    }
+    .mnav-link {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+    .main {
+      padding: 14px 10px 36px;
     }
   }
 </style>

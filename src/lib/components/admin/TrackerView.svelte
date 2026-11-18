@@ -422,5 +422,40 @@
     .aging {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     }
+    .board {
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .top {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .top h1 {
+      font-size: 32px;
+    }
+    .tools {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      gap: 8px;
+    }
+    .tools .btn {
+      width: 100%;
+      text-align: center;
+      justify-content: center;
+    }
+    .kpi {
+      padding: 12px 10px;
+    }
+    .kpi b {
+      font-size: clamp(16px, 4.4vw, 22px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 </style>

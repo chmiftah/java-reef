@@ -1020,6 +1020,59 @@ Total: ${money(t.total, s.currency)}${t.paid ? `\nPaid: ${money(t.paid, s.curren
     .item .amt {
       display: none;
     }
+    .tablewrap {
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .top {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .top h1 {
+      font-size: 32px;
+    }
+    .tools {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      gap: 8px;
+    }
+    .tools input[type="search"] {
+      width: 100%;
+      min-width: 0;
+    }
+    .tools .btn {
+      width: 100%;
+      text-align: center;
+      justify-content: center;
+    }
+    .chips {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-bottom: 4px;
+    }
+    .chips::-webkit-scrollbar {
+      display: none;
+    }
+    .chip {
+      flex: none;
+    }
+    .paper {
+      padding: 18px 14px;
+    }
+    .paper h2 {
+      font-size: 28px;
+    }
+    .paper .tot {
+      min-width: 0;
+      width: 100%;
+    }
   }
 
   @media print {

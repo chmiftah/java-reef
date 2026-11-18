@@ -111,4 +111,31 @@
     border-top: 1px solid var(--line);
     background: var(--panel);
   }
+
+  @media (max-width: 600px) {
+    dialog {
+      width: calc(100% - 16px);
+      max-height: calc(100vh - 20px);
+    }
+    .mh {
+      padding: 14px 16px;
+    }
+    .mh h2 {
+      font-size: 22px;
+    }
+    .mb {
+      padding: 16px 14px;
+      gap: 12px;
+    }
+    .mf {
+      padding: 12px 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .mf .btn {
+      flex: 1 1 auto;
+      text-align: center;
+      justify-content: center;
+    }
+  }
 </style>

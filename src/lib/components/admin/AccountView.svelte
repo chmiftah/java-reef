@@ -345,4 +345,27 @@
       grid-template-columns: 1fr;
     }
   }
+
+  @media (max-width: 600px) {
+    .top {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .top h1 {
+      font-size: 32px;
+    }
+    .tools {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      gap: 8px;
+    }
+    .tools .btn {
+      width: 100%;
+      text-align: center;
+      justify-content: center;
+    }
+  }
 </style>

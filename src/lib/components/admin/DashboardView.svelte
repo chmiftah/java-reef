@@ -191,7 +191,7 @@
   }
 
   .top h1 {
-    font-size: clamp(40px, 5vw, 60px);
+    font-size: clamp(32px, 5vw, 60px);
     font-weight: 800;
   }
 
@@ -230,8 +230,11 @@
   }
 
   .kpi b {
-    font: 800 30px/1 var(--f-display);
+    font: 800 clamp(20px, 2.2vw, 30px)/1 var(--f-display);
     letter-spacing: 0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .kpi small {
@@ -262,7 +265,7 @@
   }
 
   .panel h3 {
-    font-size: 24px;
+    font-size: clamp(18px, 4vw, 24px);
     font-weight: 800;
     margin-bottom: 12px;
     display: flex;
@@ -295,9 +298,15 @@
     border-bottom: 0;
   }
 
+  .list .row > div:first-child {
+    min-width: 0;
+  }
+
   .list .row small {
     color: var(--muted);
     display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .bars {
@@ -388,9 +397,98 @@
     .kpis {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     }
+    .kpi:last-child {
+      grid-column: 1 / -1;
+    }
     .kpi b {
       font-size: 22px;
-      overflow-wrap: anywhere;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .top {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .top h1 {
+      font-size: 32px;
+    }
+    .tools {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      width: 100%;
+    }
+    .tools .btn {
+      width: 100%;
+      text-align: center;
+      justify-content: center;
+      padding: 10px 12px;
+    }
+    .panel {
+      padding: 14px 12px;
+    }
+    .panel h3 {
+      font-size: 19px;
+      flex-wrap: wrap;
+    }
+    .bars {
+      height: 140px;
+      gap: 6px;
+    }
+    .bar-lbl {
+      gap: 6px;
+    }
+    .bar span {
+      font-size: 9px;
+    }
+    .bar-lbl span {
+      font-size: 10px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .kpis {
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .kpi {
+      padding: 12px 10px;
+      gap: 4px;
+    }
+    .kpi b {
+      font-size: clamp(16px, 4.4vw, 20px);
+    }
+    .kpi small {
+      font-size: 11px;
+    }
+    .list .row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      padding: 12px 0;
+    }
+    .list .row > div:last-child {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-align: left !important;
+      padding-top: 4px;
+      border-top: 1px dashed rgba(236, 230, 217, 0.08);
+    }
+  }
+
+  @media (max-width: 340px) {
+    .kpis {
+      grid-template-columns: 1fr;
+    }
+    .kpi:last-child {
+      grid-column: auto;
+    }
+    .tools {
+      grid-template-columns: 1fr;
     }
   }
 </style>
