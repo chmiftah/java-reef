@@ -251,8 +251,8 @@
   .shade {
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, rgba(6, 12, 14, 0.85) 0%, rgba(6, 12, 14, 0.5) 45%, rgba(6, 12, 14, 0.15) 75%),
-      linear-gradient(0deg, rgba(6, 12, 14, 0.7) 0%, transparent 60%);
+    background: linear-gradient(90deg, rgba(6, 12, 14, 0.88) 0%, rgba(6, 12, 14, 0.55) 50%, rgba(6, 12, 14, 0.2) 80%),
+      linear-gradient(0deg, rgba(6, 12, 14, 0.75) 0%, transparent 60%);
   }
 
   .vf {
@@ -313,9 +313,9 @@
   }
 
   .readout.top {
-    top: 16px;
-    left: clamp(40px, 4vw, 68px);
-    right: clamp(40px, 4vw, 68px);
+    top: clamp(20px, 3vh, 32px);
+    left: clamp(48px, 5vw, 84px);
+    right: clamp(48px, 5vw, 84px);
     justify-content: space-between;
   }
 
@@ -341,25 +341,29 @@
     position: relative;
     z-index: 2;
     width: 100%;
+    padding-inline: clamp(20px, 4vw, 48px);
   }
 
   .hero-copy {
     position: relative;
-    padding: 120px 0 clamp(48px, 8vw, 84px);
-    max-width: 820px;
+    padding: clamp(140px, 16vh, 200px) clamp(16px, 3vw, 40px) clamp(60px, 10vh, 100px);
+    max-width: 860px;
     z-index: 2;
   }
 
   .hero-copy .mono {
     color: var(--wax);
-    margin-bottom: 14px;
-    display: block;
+    margin-bottom: 20px;
+    display: inline-block;
+    letter-spacing: 0.1em;
   }
 
   .hero h1 {
-    font-size: clamp(56px, 9vw, 128px);
+    font-size: clamp(54px, 8.5vw, 120px);
     font-weight: 900;
-    text-shadow: 0 2px 30px rgba(0, 0, 0, 0.35);
+    line-height: 0.95;
+    margin-bottom: 24px;
+    text-shadow: 0 4px 32px rgba(0, 0, 0, 0.45);
   }
 
   .hero h1 em {
@@ -369,29 +373,32 @@
   }
 
   .hero p.lead {
-    max-width: 48ch;
-    margin: 18px 0 26px;
-    font-size: 18px;
-    color: rgba(236, 230, 217, 0.9);
+    max-width: 52ch;
+    margin: 0 0 34px;
+    font-size: clamp(17px, 1.6vw, 20px);
+    line-height: 1.65;
+    color: rgba(236, 230, 217, 0.95);
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
   }
 
   .cta {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 16px;
   }
 
   .ticker-bar {
     width: 100%;
     border-bottom: 1px solid var(--line);
-    background: rgba(10, 17, 19, 0.6);
+    background: rgba(10, 17, 19, 0.75);
+    backdrop-filter: blur(8px);
   }
 
   .ticker {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px 28px;
-    padding: 18px 0;
+    gap: 14px 36px;
+    padding: 22px clamp(20px, 4vw, 48px);
     color: var(--muted);
   }
 
