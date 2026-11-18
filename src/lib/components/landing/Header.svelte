@@ -14,10 +14,10 @@
       <li><a href="#watch">Watch</a></li>
     </ul>
     <div class="nav-actions">
-      <button type="button" class="btn btn-ghost" onclick={onNavigateAdmin}>
+      <button type="button" class="btn btn-ghost btn-login" onclick={onNavigateAdmin}>
         Login
       </button>
-      <a class="btn btn-wax" href="#book">Book a session</a>
+      <a class="btn btn-wax btn-book" href="#book">Book a session</a>
     </div>
   </div>
 </header>
@@ -50,6 +50,7 @@
     align-items: center;
     gap: 10px;
     color: var(--foam);
+    white-space: nowrap;
   }
 
   .logo i {
@@ -58,6 +59,7 @@
     border-radius: 50%;
     background: var(--wax);
     display: inline-block;
+    flex-shrink: 0;
   }
 
   .nav ul {
@@ -94,8 +96,27 @@
   }
 
   @media (max-width: 520px) {
-    .nav-actions {
+    .nav .wrap {
+      gap: 10px;
+    }
+
+    .logo {
+      font-size: 19px;
+      gap: 8px;
+    }
+
+    .logo i {
+      width: 8px;
+      height: 8px;
+    }
+
+    .btn-book {
       display: none;
+    }
+
+    .nav :global(.btn-login) {
+      padding: 7px 14px;
+      font-size: 13px;
     }
   }
 </style>
