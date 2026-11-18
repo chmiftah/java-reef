@@ -3,10 +3,14 @@
   import LandingPage from './lib/components/landing/LandingPage.svelte';
   import LoginView from './lib/components/admin/LoginView.svelte';
   import AdminShell from './lib/components/admin/AdminShell.svelte';
+  import PublicInvoiceView from './lib/components/PublicInvoiceView.svelte';
 
   function getRouteFromLocation() {
-    const hash = window.location.hash;
-    const path = window.location.pathname;
+    const hash = window.location.hash || "";
+    const path = window.location.pathname || "";
+    if (hash.startsWith("#invoice") || path.startsWith("/invoice")) {
+      return "invoice";
+    }
     if (hash === "#admin" || hash.startsWith("#admin/") || path === "/admin" || path.startsWith("/admin/")) {
       return "admin";
     }
@@ -37,7 +41,9 @@
   }
 </script>
 
-{#if currentRoute === "admin"}
+{#if currentRoute === "invoice"}
+  <PublicInvoiceView onBackToWebsite={() => navigateTo("landing")} />
+{:else if currentRoute === "admin"}
   {#if !db.session}
     <LoginView onBackToWebsite={() => navigateTo("landing")} />
   {:else}

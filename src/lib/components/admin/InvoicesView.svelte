@@ -10,6 +10,7 @@
     nextInvNumber,
     METHODS
   } from '../../utils/format.js';
+  import { getInvoiceShareUrl, getInvoiceShareMessage } from '../../utils/invoiceShare.js';
   import Modal from './Modal.svelte';
 
   let searchQuery = $state("");
@@ -187,6 +188,45 @@ Total: ${money(t.total, s.currency)}${t.paid ? `\nPaid: ${money(t.paid, s.curren
     }
   }
 
+  async function handleCopyInvoiceLink(inv) {
+    const c = getCustomer(inv.customerId);
+    const url = getInvoiceShareUrl(inv, c, db.settings);
+    try {
+      await navigator.clipboard.writeText(url);
+      if (!inv.sent) {
+        db.markInvoiceSent(inv.id);
+        if (previewInvoice?.id === inv.id) {
+          previewInvoice = { ...previewInvoice, sent: true };
+        }
+      }
+      db.showToast("Invoice link copied to clipboard!");
+    } catch (_) {
+      db.showToast("Copy was blocked by the browser");
+    }
+  }
+
+  function handleSendWhatsApp(inv) {
+    const c = getCustomer(inv.customerId);
+    const msg = getInvoiceShareMessage(inv, c, db.settings);
+    if (!inv.sent) {
+      db.markInvoiceSent(inv.id);
+      if (previewInvoice?.id === inv.id) {
+        previewInvoice = { ...previewInvoice, sent: true };
+      }
+    }
+    const cleanPhone = (c?.phone || "").replace(/[^0-9]/g, "");
+    const waUrl = cleanPhone
+      ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`
+      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    window.open(waUrl, "_blank", "noopener,noreferrer");
+  }
+
+  function handleOpenPublicView(inv) {
+    const c = getCustomer(inv.customerId);
+    const url = getInvoiceShareUrl(inv, c, db.settings);
+    window.open(url, "_blank");
+  }
+
   function confirmDelete(inv) {
     deletingInvoice = inv;
     isDeleteModalOpen = true;
@@ -259,6 +299,14 @@ Total: ${money(t.total, s.currency)}${t.paid ? `\nPaid: ${money(t.paid, s.curren
               <span class="pill s-{s.toLowerCase()}">{s === "Partial" ? "Partly paid" : s}</span>
             </td>
             <td class="act">
+              <button
+                class="icon-btn"
+                type="button"
+                title="Copy shareable link"
+                onclick={() => handleCopyInvoiceLink(inv)}
+              >
+                🔗 Link
+              </button>
               <button
                 class="icon-btn"
                 type="button"
@@ -612,6 +660,15 @@ Total: ${money(t.total, s.currency)}${t.paid ? `\nPaid: ${money(t.paid, s.curren
 
   {#snippet extraActions()}
     {#if previewInvoice}
+      <button class="btn btn-wax" type="button" onclick={() => handleSendWhatsApp(previewInvoice)}>
+        📱 Send WhatsApp
+      </button>
+      <button class="btn" type="button" onclick={() => handleCopyInvoiceLink(previewInvoice)}>
+        🔗 Copy Link
+      </button>
+      <button class="btn" type="button" onclick={() => handleOpenPublicView(previewInvoice)}>
+        Preview Link
+      </button>
       <button class="btn" type="button" onclick={() => copyInvoiceText(previewInvoice)}>
         Copy as text
       </button>
@@ -620,7 +677,7 @@ Total: ${money(t.total, s.currency)}${t.paid ? `\nPaid: ${money(t.paid, s.curren
       </button>
       {#if !previewInvoice.sent && invStatus(previewInvoice) !== "Void"}
         <button
-          class="btn btn-wax"
+          class="btn"
           type="button"
           onclick={() => {
             db.markInvoiceSent(previewInvoice.id);

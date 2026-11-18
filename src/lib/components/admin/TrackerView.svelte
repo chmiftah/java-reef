@@ -8,6 +8,7 @@
     invTotals,
     invStatus
   } from '../../utils/format.js';
+  import { getInvoiceShareUrl } from '../../utils/invoiceShare.js';
 
   let { onOpenNewInvoice, onOpenViewInvoice, onOpenPaymentForInvoice } = $props();
 
@@ -81,6 +82,20 @@
       () => db.showToast("Reminder copied"),
       () => db.showToast("Copy was blocked by the browser")
     );
+  }
+
+  async function handleCopyInvoiceLink(inv) {
+    const c = getCustomer(inv.customerId);
+    const url = getInvoiceShareUrl(inv, c, db.settings);
+    try {
+      await navigator.clipboard.writeText(url);
+      if (!inv.sent) {
+        db.markInvoiceSent(inv.id);
+      }
+      db.showToast("Invoice link copied to clipboard!");
+    } catch (_) {
+      db.showToast("Copy was blocked by the browser");
+    }
   }
 </script>
 
@@ -159,6 +174,14 @@
                 </div>
               {/if}
               <div class="acts">
+                <button
+                  class="icon-btn"
+                  type="button"
+                  title="Copy shareable link"
+                  onclick={() => handleCopyInvoiceLink(i)}
+                >
+                  🔗 Link
+                </button>
                 <button
                   class="icon-btn"
                   type="button"
