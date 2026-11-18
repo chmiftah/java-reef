@@ -160,7 +160,7 @@
   });
 </script>
 
-<div class="hero wrap" id="top">
+<div class="hero" id="top">
   <div class="frame">
     <canvas bind:this={canvasEl} id="sea" aria-hidden="true"></canvas>
     {#if heroPhotoLoaded}
@@ -182,47 +182,53 @@
         <span>WATER ANGLE</span>
       </div>
     </div>
-    <div class="hero-copy">
-      <span class="mono">Surf filmer · Photographer · Guide — Bali &amp; Java</span>
-      <h1>Your wave,<br /><em>on film.</em></h1>
-      <p class="lead">
-        Water and land angles of your session at Indonesia's reef breaks, shot by a local who
-        knows the lineup. Uluwatu, Padang Padang and Java's hidden point breaks.
-      </p>
-      <div class="cta">
-        <a class="btn btn-wax" href="#book">Book a session</a>
-        <a
-          class="btn btn-ghost"
-          href="https://m.youtube.com/@JavaReeffilmer"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Watch on YouTube
-        </a>
+    <div class="hero-inner wrap">
+      <div class="hero-copy">
+        <span class="mono">Surf filmer · Photographer · Guide — Bali &amp; Java</span>
+        <h1>Your wave,<br /><em>on film.</em></h1>
+        <p class="lead">
+          Water and land angles of your session at Indonesia's reef breaks, shot by a local who
+          knows the lineup. Uluwatu, Padang Padang and Java's hidden point breaks.
+        </p>
+        <div class="cta">
+          <a class="btn btn-wax" href="#book">Book a session</a>
+          <a
+            class="btn btn-ghost"
+            href="https://m.youtube.com/@JavaReeffilmer"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Watch on YouTube
+          </a>
+        </div>
       </div>
     </div>
   </div>
-  <div class="ticker mono">
-    <span><b>@blackskin777</b> on Instagram</span>
-    <span>Based in <b>Bali</b></span>
-    <span>Filming <b>Bali + Java</b></span>
-    <span>Video · Photo · Trips · Coaching · Car rental</span>
+  <div class="ticker-bar">
+    <div class="ticker wrap mono">
+      <span><b>@blackskin777</b> on Instagram</span>
+      <span>Based in <b>Bali</b></span>
+      <span>Filming <b>Bali + Java</b></span>
+      <span>Video · Photo · Trips · Coaching · Car rental</span>
+    </div>
   </div>
 </div>
 
 <style>
   .hero {
     position: relative;
-    padding: 28px 0 0;
+    width: 100%;
+    padding: 0;
   }
 
   .frame {
     position: relative;
     display: flex;
     align-items: flex-end;
-    min-height: 600px;
+    width: 100%;
+    min-height: clamp(620px, 88vh, 920px);
     overflow: hidden;
-    border-radius: 4px;
+    border-radius: 0;
     background: var(--deep);
   }
 
@@ -245,14 +251,15 @@
   .shade {
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, rgba(6, 12, 14, 0.75), rgba(6, 12, 14, 0.15) 65%),
-      linear-gradient(0deg, rgba(6, 12, 14, 0.6), transparent 50%);
+    background: linear-gradient(90deg, rgba(6, 12, 14, 0.85) 0%, rgba(6, 12, 14, 0.5) 45%, rgba(6, 12, 14, 0.15) 75%),
+      linear-gradient(0deg, rgba(6, 12, 14, 0.7) 0%, transparent 60%);
   }
 
   .vf {
     position: absolute;
-    inset: 18px;
+    inset: clamp(16px, 2.5vw, 32px);
     pointer-events: none;
+    z-index: 2;
   }
 
   .vf .c {
@@ -306,9 +313,9 @@
   }
 
   .readout.top {
-    top: 14px;
-    left: 52px;
-    right: 52px;
+    top: 16px;
+    left: clamp(40px, 4vw, 68px);
+    right: clamp(40px, 4vw, 68px);
     justify-content: space-between;
   }
 
@@ -330,9 +337,15 @@
     50% { opacity: 0.15; }
   }
 
+  .hero-inner {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+  }
+
   .hero-copy {
     position: relative;
-    padding: 110px clamp(24px, 6vw, 72px) clamp(40px, 7vw, 72px);
+    padding: 120px 0 clamp(48px, 8vw, 84px);
     max-width: 820px;
     z-index: 2;
   }
@@ -368,12 +381,17 @@
     gap: 12px;
   }
 
+  .ticker-bar {
+    width: 100%;
+    border-bottom: 1px solid var(--line);
+    background: rgba(10, 17, 19, 0.6);
+  }
+
   .ticker {
     display: flex;
     flex-wrap: wrap;
     gap: 10px 28px;
     padding: 18px 0;
-    border-bottom: 1px solid var(--line);
     color: var(--muted);
   }
 
