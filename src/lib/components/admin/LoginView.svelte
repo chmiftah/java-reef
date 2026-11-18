@@ -3,17 +3,17 @@
 
   let { onBackToWebsite } = $props();
 
-  // Setup form fields
+  // Setup form fields (if needed)
   let suName = $state("");
   let suUser = $state("");
   let suPass = $state("");
   let suPass2 = $state("");
   let suErr = $state("");
 
-  // Login form fields
-  let liUser = $state("");
-  let liPass = $state("");
-  let liRemember = $state(false);
+  // Login form fields prefilled with default credentials
+  let liUser = $state("admin");
+  let liPass = $state("admin");
+  let liRemember = $state(true);
   let liErr = $state("");
 
   let hasAdmin = $derived(!!db.user);
@@ -100,6 +100,12 @@
         <span class="mono" style="color:var(--wax)">Admin</span>
         <h2>Sign in</h2>
 
+        <div class="credentials-hint">
+          <span>Default credentials:</span>
+          <code>Username: admin</code>
+          <code>Password: admin</code>
+        </div>
+
         <label for="li-user">
           Username
           <input id="li-user" bind:value={liUser} autocomplete="username" required />
@@ -180,6 +186,27 @@
   form h2 {
     font-size: 44px;
     font-weight: 800;
+  }
+
+  .credentials-hint {
+    background: rgba(63, 184, 166, 0.08);
+    border: 1px dashed rgba(63, 184, 166, 0.4);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 13px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+  }
+
+  .credentials-hint code {
+    font-family: var(--f-mono);
+    color: var(--wax);
+    background: rgba(10, 17, 19, 0.6);
+    padding: 2px 6px;
+    border-radius: 2px;
   }
 
   .note {
