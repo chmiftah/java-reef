@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Java Reef Filmer</title>
+<meta name="description" content="Surf videography, photography, surf trips and guiding in Bali and Java. Book a session with Java Reef Filmer (@blackskin777).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Layout idea: the whole page is seen through a camera viewfinder over dark reef water — film readouts, shot lists, timecode. */
+  --basalt:#0a1113;      /* black volcanic sand / night water */
+  --deep:#0f2a2e;        /* reef channel */
+  --reef:#3fb8a6;        /* shallow reef teal */
+  --foam:#ece6d9;        /* whitewash, sand */
+  --wax:#f29b38;         /* board wax / sunrise — the one accent */
+  --muted:#8fa5a3;
+  --line:rgba(236,230,217,.14);
+  --f-display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --f-body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--basalt);color:var(--foam);font:400 17px/1.6 var(--f-body);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+img,canvas{max-width:100%;display:block}
+h1,h2,h3{font-family:var(--f-display);text-transform:uppercase;line-height:.9;text-wrap:balance;letter-spacing:.01em}
+.mono{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.wrap{width:min(1200px,100% - 40px);margin-inline:auto}
+:focus-visible{outline:2px solid var(--wax);outline-offset:3px}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:20;background:rgba(10,17,19,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}
+.logo{font-family:var(--f-display);font-weight:900;font-size:24px;letter-spacing:.04em;text-decoration:none;display:flex;align-items:center;gap:10px}
+.logo i{width:10px;height:10px;border-radius:50%;background:var(--wax);display:inline-block}
+.nav ul{display:flex;gap:28px;list-style:none}
+.nav ul a{text-decoration:none;color:var(--muted);font-size:15px}
+.nav ul a:hover{color:var(--foam)}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:13px 22px;border-radius:2px;font:600 15px/1 var(--f-body);text-decoration:none;cursor:pointer;border:1px solid transparent;transition:transform .15s,background .15s,border-color .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-wax{background:var(--wax);color:#1a0f02}
+.btn-wax:hover{background:#ffb055}
+.btn-ghost{border-color:var(--line);color:var(--foam);background:transparent}
+.btn-ghost:hover{border-color:var(--foam)}
+.nav .btn{padding:10px 16px}
+.nav-actions{display:flex;align-items:center;gap:10px}
+
+/* HERO — viewfinder */
+.hero{position:relative;padding:28px 0 0}
+.frame{position:relative;display:flex;align-items:flex-end;min-height:600px;overflow:hidden;border-radius:4px;background:var(--deep)}
+#sea{position:absolute;inset:0;width:100%;height:100%}
+.vf{position:absolute;inset:18px;pointer-events:none}
+.vf .c{position:absolute;width:34px;height:34px;border:2px solid rgba(236,230,217,.85)}
+.vf .tl{top:0;left:0;border-right:0;border-bottom:0}.vf .tr{top:0;right:0;border-left:0;border-bottom:0}
+.vf .bl{bottom:0;left:0;border-right:0;border-top:0}.vf .br{bottom:0;right:0;border-left:0;border-top:0}
+.vf .cross{position:absolute;left:50%;top:50%;width:22px;height:22px;transform:translate(-50%,-50%)}
+.vf .cross:before,.vf .cross:after{content:"";position:absolute;background:rgba(236,230,217,.55)}
+.vf .cross:before{left:50%;top:0;bottom:0;width:1px}.vf .cross:after{top:50%;left:0;right:0;height:1px}
+.readout{position:absolute;display:flex;gap:18px;align-items:center;color:rgba(236,230,217,.92)}
+.readout.top{top:14px;left:52px;right:52px;justify-content:space-between}
+.rec{display:flex;align-items:center;gap:8px}
+.rec b{width:9px;height:9px;border-radius:50%;background:#ff4a3d;animation:blink 1.2s steps(2) infinite}
+@keyframes blink{50%{opacity:.15}}
+.hero-copy{position:relative;padding:110px clamp(24px,6vw,72px) clamp(40px,7vw,72px);max-width:820px}
+.hero-copy .mono{color:var(--wax);margin-bottom:14px;display:block}
+.hero h1{font-size:clamp(56px,9vw,128px);font-weight:900;text-shadow:0 2px 30px rgba(0,0,0,.35)}
+.hero h1 em{font-style:normal;color:transparent;-webkit-text-stroke:2px var(--foam)}
+.hero p.lead{max-width:48ch;margin:18px 0 26px;font-size:18px;color:rgba(236,230,217,.9)}
+.cta{display:flex;flex-wrap:wrap;gap:12px}
+.ticker{display:flex;flex-wrap:wrap;gap:10px 28px;padding:18px 0;border-bottom:1px solid var(--line);color:var(--muted)}
+.ticker span b{color:var(--foam);font-weight:600}
+
+/* SECTIONS */
+section{padding:110px 0 0}
+.head{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:end;margin-bottom:48px}
+.head .mono{color:var(--wax);padding-bottom:8px}
+.head h2{font-size:clamp(48px,7vw,96px);font-weight:800}
+.head p{grid-column:2;max-width:58ch;color:var(--muted)}
+
+/* Services as a shot list */
+.shots{border-top:1px solid var(--line)}
+.shot{display:grid;grid-template-columns:200px 1fr 1.1fr;gap:24px;padding:34px 0;border-bottom:1px solid var(--line);transition:background .2s}
+.shot:hover{background:linear-gradient(90deg,rgba(63,184,166,.07),transparent 70%)}
+.shot .mono{color:var(--muted);padding-top:8px}
+.shot h3{font-size:clamp(34px,4vw,52px);font-weight:800}
+.shot ul{list-style:none;display:grid;gap:10px}
+.shot li{display:flex;gap:12px;align-items:baseline}
+.shot li:before{content:"";flex:none;width:14px;height:2px;background:var(--reef);transform:translateY(-4px)}
+
+
+/* real photos (img/ folder); canvas art shows if a photo is missing */
+.photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none}
+.frame .shade{position:absolute;inset:0}
+.frame .photo+.shade{background:linear-gradient(90deg,rgba(6,12,14,.75),rgba(6,12,14,.15) 65%),linear-gradient(0deg,rgba(6,12,14,.6),transparent 50%)}
+.pic{position:relative;height:190px;overflow:hidden}
+.pic canvas{position:absolute;inset:0;height:100%}
+.pic .photo{transition:transform .6s}
+.spot:hover .pic .photo{transform:scale(1.05)}
+.reel .photo{position:absolute;z-index:0;opacity:.55;transition:transform .5s}
+.reel:hover .photo{transform:scale(1.04)}
+.reel:after{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(0deg,rgba(6,12,14,.9),rgba(6,12,14,.2) 75%)}
+
+/* Spots */
+.spots{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.spot{position:relative;border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--deep);display:flex;flex-direction:column}
+.spot canvas{width:100%;background:#0d2427}
+.spot .body{padding:20px 22px 24px;display:grid;gap:8px}
+.spot h3{font-size:40px;font-weight:800}
+.spot .meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:999px;padding:4px 10px;font:500 12px/1.2 var(--f-mono);letter-spacing:.05em;color:var(--foam)}
+.chip.l{border-color:rgba(63,184,166,.5);color:var(--reef)}
+.spot p{color:var(--muted);font-size:15px}
+
+/* Process */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-radius:4px}
+.step{padding:28px 24px;border-right:1px solid var(--line);display:grid;gap:12px;align-content:start}
+.step:last-child{border-right:0}
+.step .tc{font-family:var(--f-mono);font-size:13px;color:var(--wax)}
+.step h3{font-size:30px;font-weight:800}
+.step p{color:var(--muted);font-size:15px}
+
+/* Watch */
+.watch{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+.reel{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:300px;padding:28px;border-radius:4px;text-decoration:none;overflow:hidden;border:1px solid var(--line)}
+.reel:before{content:"";position:absolute;inset:0;z-index:0;transition:transform .5s}
+.reel:hover:before{transform:scale(1.04)}
+.reel>*{position:relative;z-index:1}
+.reel.yt:before{background:radial-gradient(120% 90% at 80% 10%,#f29b3855,transparent 55%),linear-gradient(170deg,#18474b,#0a1a1d 70%)}
+.reel.ig:before{background:radial-gradient(100% 80% at 20% 0%,#3fb8a64d,transparent 60%),linear-gradient(200deg,#13333a,#0a1113 75%)}
+.reel .play{width:64px;height:64px;border-radius:50%;border:2px solid var(--foam);display:grid;place-items:center;margin-bottom:auto;transition:background .2s}
+.reel:hover .play{background:var(--wax);border-color:var(--wax)}
+.reel .play svg{width:20px;height:20px;fill:var(--foam);margin-left:3px}
+.reel:hover .play svg{fill:#1a0f02}
+.reel h3{font-size:clamp(36px,4vw,56px);font-weight:800;margin:10px 0 8px}
+.reel p{color:rgba(236,230,217,.8);max-width:42ch}
+.reel .mono{color:var(--wax)}
+
+/* Booking */
+.book{display:grid;grid-template-columns:1fr 1.25fr;gap:48px;align-items:start}
+.book aside{display:grid;gap:18px;position:sticky;top:96px}
+.book aside p{color:var(--muted)}
+.contact-line{display:flex;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--line)}
+.contact-line .mono{color:var(--muted)}
+form{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:32px;background:var(--deep);border:1px solid var(--line);border-radius:4px}
+.field{display:grid;gap:6px}
+.field.full{grid-column:1/-1}
+label{font:600 13px/1.2 var(--f-body);color:var(--muted)}
+input,select,textarea{width:100%;font:400 16px/1.4 var(--f-body);color:var(--foam);background:var(--basalt);border:1px solid var(--line);border-radius:2px;padding:12px 14px}
+textarea{min-height:110px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--reef)}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat}
+.err{color:#ff8a7a;font-size:13px;min-height:0}
+form .btn{justify-content:center;grid-column:1/-1;padding:16px}
+.result{grid-column:1/-1;display:none;gap:14px;padding:20px;border:1px solid rgba(63,184,166,.45);border-radius:2px;background:rgba(63,184,166,.06)}
+.result.show{display:grid}
+.result pre{white-space:pre-wrap;font:400 13px/1.55 var(--f-mono);color:var(--foam);background:var(--basalt);padding:14px;border-radius:2px;max-height:260px;overflow:auto}
+.result .row{display:flex;flex-wrap:wrap;gap:10px}
+.result small{color:var(--muted)}
+
+footer{margin-top:120px;border-top:1px solid var(--line);padding:40px 0 60px}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;align-items:end}
+footer .big{font-family:var(--f-display);font-weight:900;font-size:clamp(56px,12vw,180px);line-height:.8;color:transparent;-webkit-text-stroke:1px rgba(236,230,217,.25);text-transform:uppercase}
+footer nav{display:flex;gap:20px;color:var(--muted)}
+
+@media (max-width:900px){
+  .nav ul{display:none}
+  .head,.shot{grid-template-columns:1fr}
+  .head p{grid-column:1}
+  .shot{gap:12px}
+  .spots,.watch,.book{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr 1fr}
+  .step:nth-child(2){border-right:0}
+  .step:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .book aside{position:static}
+}
+@media (max-width:520px){
+  .steps{grid-template-columns:1fr}
+  .step{border-right:0;border-bottom:1px solid var(--line)}
+  .step:last-child{border-bottom:0}
+  form{grid-template-columns:1fr;padding:22px}
+  .readout.top .hide-s{display:none}
+  .nav .btn,.nav-actions{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="#top"><i aria-hidden="true"></i>JAVA REEF FILMER</a>
+    <ul>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#spots">Spots</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#watch">Watch</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a class="btn btn-ghost" href="admin.html">Login</a>
+      <a class="btn btn-wax" href="#book">Book a session</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <div class="hero wrap">
+    <div class="frame">
+      <canvas id="sea" aria-hidden="true"></canvas>
+      <img class="photo" src="img/hero.jpg" alt="Surfer riding a wave at sunset" onload="window.heroPhoto=true" onerror="this.remove()">
+      <span class="shade" aria-hidden="true"></span>
+      <div class="vf" aria-hidden="true">
+        <span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span>
+        <span class="cross"></span>
+        <div class="readout top mono">
+          <span class="rec"><b></b>REC <span id="tc">00:00:00:00</span></span>
+          <span class="hide-s">ULUWATU · 8°49′S 115°05′E</span>
+          <span>WATER ANGLE</span>
+        </div>
+      </div>
+      <div class="hero-copy">
+        <span class="mono">Surf filmer · Photographer · Guide — Bali &amp; Java</span>
+        <h1>Your wave,<br><em>on film.</em></h1>
+        <p class="lead">Water and land angles of your session at Indonesia's reef breaks, shot by a local who knows the lineup. Uluwatu, Padang Padang and Java's hidden point breaks.</p>
+        <div class="cta">
+          <a class="btn btn-wax" href="#book">Book a session</a>
+          <a class="btn btn-ghost" href="https://m.youtube.com/@JavaReeffilmer" target="_blank" rel="noopener">Watch on YouTube</a>
+        </div>
+      </div>
+    </div>
+    <div class="ticker mono">
+      <span><b>@blackskin777</b> on Instagram</span>
+      <span>Based in <b>Bali</b></span>
+      <span>Filming <b>Bali + Java</b></span>
+      <span>Video · Photo · Trips · Coaching · Car rental</span>
+    </div>
+  </div>
+
+  <section id="services">
+    <div class="wrap">
+      <div class="head">
+        <span class="mono">Shot list</span>
+        <h2>What I do</h2>
+        <p>One local crew for the whole trip: someone to film you, take you to the right break for the swell, and drive you there.</p>
+      </div>
+      <div class="shots">
+        <article class="shot">
+          <span class="mono">Shot 01 · In the water</span>
+          <h3>Surf<br>videography</h3>
+          <ul>
+            <li>Water angles from the channel and the impact zone</li>
+            <li>Land angles from the cliff and the beach</li>
+            <li>Surf photography of your best waves</li>
+            <li>Session clips edited for Instagram and YouTube</li>
+          </ul>
+        </article>
+        <article class="shot">
+          <span class="mono">Shot 02 · On the road</span>
+          <h3>Trips &amp;<br>guiding</h3>
+          <ul>
+            <li>Indo surf trip packages across Bali and Java</li>
+            <li>Surf coaching, with footage to review your technique</li>
+            <li>Car rental for getting between breaks</li>
+            <li>Local knowledge of which spot works on which swell</li>
+          </ul>
+        </article>
+        <article class="shot">
+          <span class="mono">Shot 03 · On land</span>
+          <h3>Commercial<br>&amp; weddings</h3>
+          <ul>
+            <li>Commercial advertisements for brands in Bali</li>
+            <li>Wedding films in Bali</li>
+            <li>Ocean and lifestyle footage for campaigns</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="spots">
+    <div class="wrap">
+      <div class="head">
+        <span class="mono">Where we shoot</span>
+        <h2>The breaks</h2>
+        <p>Reef breaks reward local knowledge: the tide, the swell direction and the safest angle to film from. We pick the spot together based on your level and the forecast.</p>
+      </div>
+      <div class="spots">
+        <article class="spot">
+          <div class="pic"><canvas data-wave="left" aria-hidden="true"></canvas><img class="photo" src="img/uluwatu.jpg" alt="Uluwatu reef break" loading="lazy" onerror="this.remove()"></div>
+          <div class="body">
+            <div class="meta"><span class="chip l">Left-hander</span><span class="chip">Reef</span><span class="chip">Bukit, Bali</span></div>
+            <h3>Uluwatu</h3>
+            <p>Bali's best-known left, filmed from the water and from the cliffs above the cave.</p>
+          </div>
+        </article>
+        <article class="spot">
+          <div class="pic"><canvas data-wave="barrel" aria-hidden="true"></canvas><img class="photo" src="img/padang-padang.jpg" alt="Padang Padang barrel" loading="lazy" onerror="this.remove()"></div>
+          <div class="body">
+            <div class="meta"><span class="chip l">Left barrel</span><span class="chip">Shallow reef</span><span class="chip">Bukit, Bali</span></div>
+            <h3>Padang Padang</h3>
+            <p>A heavy, hollow left over shallow reef. Strong surfers only when it's big.</p>
+          </div>
+        </article>
+        <article class="spot">
+          <div class="pic"><canvas data-wave="point" aria-hidden="true"></canvas><img class="photo" src="img/java.jpg" alt="Point break in Java" loading="lazy" onerror="this.remove()"></div>
+          <div class="body">
+            <div class="meta"><span class="chip l">Point breaks</span><span class="chip">Reef</span><span class="chip">Java</span></div>
+            <h3>Java points</h3>
+            <p>Hidden point breaks across Java, away from the crowds. Location details shared when you book a trip.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <div class="head">
+        <span class="mono">Timeline</span>
+        <h2>How a session works</h2>
+      </div>
+      <div class="steps">
+        <div class="step"><span class="tc">00:00</span><h3>Book</h3><p>Send the form below with your dates, level and what you want filmed.</p></div>
+        <div class="step"><span class="tc">00:15</span><h3>Check the swell</h3><p>We look at the forecast and tides together and choose the break and time.</p></div>
+        <div class="step"><span class="tc">01:00</span><h3>Paddle out</h3><p>You surf. I film from the water, the land, or both.</p></div>
+        <div class="step"><span class="tc">02:00</span><h3>Get your clips</h3><p>Your best waves, edited and ready to post.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="watch">
+    <div class="wrap">
+      <div class="head">
+        <span class="mono">Reel</span>
+        <h2>Watch the work</h2>
+      </div>
+      <div class="watch">
+        <a class="reel yt" href="https://m.youtube.com/@JavaReeffilmer" target="_blank" rel="noopener">
+          <img class="photo" src="img/youtube.jpg" alt="" loading="lazy" onerror="this.remove()">
+          <span class="play"><svg viewBox="0 0 20 20"><path d="M4 2l14 8-14 8z"/></svg></span>
+          <span class="mono">YouTube · JAVA REEF FILMER</span>
+          <h3>Full sessions</h3>
+          <p>Full-length surf documentaries, hidden point-break sessions and swell recaps.</p>
+        </a>
+        <a class="reel ig" href="https://www.instagram.com/blackskin777/" target="_blank" rel="noopener">
+          <img class="photo" src="img/instagram.jpg" alt="" loading="lazy" onerror="this.remove()">
+          <span class="play"><svg viewBox="0 0 20 20"><path d="M4 2l14 8-14 8z"/></svg></span>
+          <span class="mono">Instagram · @blackskin777</span>
+          <h3>Daily reels</h3>
+          <p>Daily clips from the lineup, plus booking contact.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section id="book">
+    <div class="wrap book">
+      <aside>
+        <div class="head" style="grid-template-columns:1fr;margin:0">
+          <span class="mono">Booking</span>
+          <h2>Book your session</h2>
+        </div>
+        <p>Fill in your plans and you'll get a ready-made booking message to send by DM. Rates depend on the service, the spot and how many surfers, so ask in your message.</p>
+        <div>
+          <div class="contact-line"><span class="mono">Instagram</span><a href="https://www.instagram.com/blackskin777/" target="_blank" rel="noopener">@blackskin777</a></div>
+          <div class="contact-line"><span class="mono">YouTube</span><a href="https://m.youtube.com/@JavaReeffilmer" target="_blank" rel="noopener">@JavaReeffilmer</a></div>
+          <div class="contact-line"><span class="mono">Base</span><span>Bali, Indonesia</span></div>
+        </div>
+      </aside>
+
+      <form id="bookForm" novalidate>
+        <div class="field"><label for="f-name">Your name</label><input id="f-name" name="name" autocomplete="name" required></div>
+        <div class="field"><label for="f-contact">Email or WhatsApp</label><input id="f-contact" name="contact" required placeholder="you@email.com / +61…"></div>
+        <div class="field full"><label for="f-service">Service</label>
+          <select id="f-service" name="service" required>
+            <option value="">Choose a service</option>
+            <option>Surf videography (water angle)</option>
+            <option>Surf videography (land angle)</option>
+            <option>Surf photography</option>
+            <option>Indo surf trip package</option>
+            <option>Surf coaching</option>
+            <option>Car rental</option>
+            <option>Commercial / advertisement</option>
+            <option>Wedding film</option>
+          </select>
+        </div>
+        <div class="field"><label for="f-date">Preferred date</label><input id="f-date" name="date" type="date" required></div>
+        <div class="field"><label for="f-days">Number of days</label><input id="f-days" name="days" type="number" min="1" max="60" value="1"></div>
+        <div class="field"><label for="f-spot">Spot</label>
+          <select id="f-spot" name="spot">
+            <option>Let's decide on the forecast</option>
+            <option>Uluwatu</option>
+            <option>Padang Padang</option>
+            <option>Java point breaks</option>
+            <option>Other (in message)</option>
+          </select>
+        </div>
+        <div class="field"><label for="f-level">Surf level</label>
+          <select id="f-level" name="level">
+            <option>Beginner</option>
+            <option selected>Intermediate</option>
+            <option>Advanced</option>
+            <option>Pro</option>
+            <option>Not surfing (non-surf shoot)</option>
+          </select>
+        </div>
+        <div class="field full"><label for="f-people">Number of people</label><input id="f-people" name="people" type="number" min="1" max="30" value="1"></div>
+        <div class="field full"><label for="f-msg">Anything else?</label><textarea id="f-msg" name="msg" placeholder="Board type, what you want to improve, where you're staying…"></textarea></div>
+        <p class="err full" id="err" role="alert"></p>
+        <button class="btn btn-wax" type="submit">Create my booking message</button>
+
+        <div class="result" id="result" aria-live="polite">
+          <span class="mono" style="color:var(--reef)">Booking message ready</span>
+          <pre id="msgOut"></pre>
+          <div class="row">
+            <button class="btn btn-wax" type="button" id="copyBtn">Copy message</button>
+            <a class="btn btn-ghost" id="waBtn" target="_blank" rel="noopener" hidden>Send on WhatsApp</a>
+            <a class="btn btn-ghost" href="https://ig.me/m/blackskin777" target="_blank" rel="noopener">Open Instagram DM</a>
+          </div>
+          <small id="hint">Copy the message, then paste it into the Instagram DM to @blackskin777.</small>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="big" aria-hidden="true">Java Reef</div>
+    <nav class="mono">
+      <a href="https://www.instagram.com/blackskin777/" target="_blank" rel="noopener">Instagram</a>
+      <a href="https://m.youtube.com/@JavaReeffilmer" target="_blank" rel="noopener">YouTube</a>
+      <span>Photos: Unsplash</span>
+      <a href="admin.html">Admin</a>
+      <span>© <span id="yr"></span> Java Reef Filmer</span>
+    </nav>
+  </div>
+</footer>
+
+<script>
+/* ===== Settings: put the WhatsApp number here (country code, digits only, e.g. "6281234567890") ===== */
+const WA_NUMBER = "";
+
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+document.getElementById("yr").textContent = new Date().getFullYear();
+
+/* ---- Hero: dawn swell at a reef break ---- */
+(function(){
+  const cv = document.getElementById("sea"), ctx = cv.getContext("2d");
+  let W, H, dpr;
+  function size(){
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  size(); addEventListener("resize", size);
+  const layers = [
+    {y:.50, amp:4,  len:180, sp:.25, col:"#1d5459"},
+    {y:.57, amp:7,  len:260, sp:.35, col:"#1a4a4f"},
+    {y:.65, amp:12, len:340, sp:.5,  col:"#143c41"},
+    {y:.75, amp:18, len:420, sp:.7,  col:"#0f3035"},
+    {y:.87, amp:24, len:520, sp:.95, col:"#0b2226"}
+  ];
+  function wave(x,t,L){ return Math.sin(x/L.len*6.283 + t*L.sp) + .45*Math.sin(x/(L.len*.47)*6.283 - t*L.sp*1.3); }
+  function draw(t){
+    const sky = ctx.createLinearGradient(0,0,0,H*.5);
+    sky.addColorStop(0,"#102a30"); sky.addColorStop(.6,"#3c5655"); sky.addColorStop(1,"#d98a4a");
+    ctx.fillStyle = sky; ctx.fillRect(0,0,W,H);
+    // sun
+    const sx = W*.72, sy = H*.47;
+    const g = ctx.createRadialGradient(sx,sy,0,sx,sy,H*.45);
+    g.addColorStop(0,"rgba(255,190,110,.75)"); g.addColorStop(.15,"rgba(242,155,56,.35)"); g.addColorStop(1,"rgba(242,155,56,0)");
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = "#ffd29a"; ctx.beginPath(); ctx.arc(sx,sy,H*.045,0,7); ctx.fill();
+    // headland silhouette (Bukit cliffs)
+    ctx.fillStyle = "#0c1c1f"; ctx.beginPath(); ctx.moveTo(0,H*.5);
+    ctx.lineTo(0,H*.36); ctx.lineTo(W*.08,H*.38); ctx.lineTo(W*.17,H*.41); ctx.lineTo(W*.26,H*.44); ctx.lineTo(W*.34,H*.5); ctx.fill();
+    layers.forEach((L,i)=>{
+      const base = H*L.y;
+      ctx.beginPath(); ctx.moveTo(0,H);
+      for(let x=0;x<=W+8;x+=8) ctx.lineTo(x, base + wave(x,t,L)*L.amp);
+      ctx.lineTo(W,H); ctx.closePath(); ctx.fillStyle = L.col; ctx.fill();
+      // foam line + sun glint
+      ctx.beginPath();
+      for(let x=0;x<=W+8;x+=8){ const y = base + wave(x,t,L)*L.amp; x? ctx.lineTo(x,y):ctx.moveTo(x,y); }
+      ctx.strokeStyle = `rgba(236,230,217,${.10 + i*.04})`; ctx.lineWidth = 1 + i*.4; ctx.stroke();
+      if(i<3){ ctx.fillStyle="rgba(255,200,130,.25)";
+        for(let k=0;k<6;k++){ const gx = sx - 60 + ((k*53 + t*20*(i+1)) % 120); ctx.fillRect(gx, base + wave(gx,t,L)*L.amp + 3, 14 - i*3, 1.5); } }
+    });
+    // surfer on the third swell
+    const L = layers[2], sxp = ((t*38) % (W+120)) - 60, syp = H*L.y + wave(sxp,t,L)*L.amp;
+    ctx.save(); ctx.translate(sxp, syp-2); ctx.fillStyle="#071012";
+    ctx.beginPath(); ctx.ellipse(0,2,15,2.4,-.08,0,7); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-5,1); ctx.lineTo(-2,-10); ctx.lineTo(3,-9); ctx.lineTo(5,1); ctx.lineTo(2,1); ctx.lineTo(1,-5); ctx.lineTo(-2,1); ctx.fill();
+    ctx.beginPath(); ctx.arc(.5,-13,2.6,0,7); ctx.fill();
+    ctx.lineWidth=1.6; ctx.strokeStyle="#071012"; ctx.beginPath(); ctx.moveTo(-9,-11); ctx.lineTo(0,-8); ctx.lineTo(10,-6); ctx.stroke();
+    ctx.restore();
+    // grain + vignette
+    const v = ctx.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,W*.75);
+    v.addColorStop(0,"rgba(0,0,0,0)"); v.addColorStop(1,"rgba(0,0,0,.55)");
+    ctx.fillStyle = v; ctx.fillRect(0,0,W,H);
+  }
+  const tc = document.getElementById("tc"); const t0 = performance.now();
+  function loop(now){
+    const t = (now - t0)/1000; if(!window.heroPhoto) draw(t);
+    const f = Math.floor(t*25), p = n=>String(n).padStart(2,"0");
+    tc.textContent = `${p(Math.floor(f/90000))}:${p(Math.floor(f/1500)%60)}:${p(Math.floor(f/25)%60)}:${p(f%25)}`;
+    if(!reduce) requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  if(reduce) addEventListener("resize", ()=>draw(4));
+})();
+
+/* ---- Spot cards: break shape diagrams ---- */
+document.querySelectorAll(".spot canvas").forEach(cv=>{
+  const ctx = cv.getContext("2d"), kind = cv.dataset.wave;
+  function render(t){
+    const dpr = Math.min(devicePixelRatio||1,2), W = cv.clientWidth, H = cv.clientHeight;
+    if(cv.width !== W*dpr){ cv.width = W*dpr; cv.height = H*dpr; }
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    const bg = ctx.createLinearGradient(0,0,0,H); bg.addColorStop(0,"#123a3f"); bg.addColorStop(1,"#0a1c1f");
+    ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+    // reef shelf
+    ctx.fillStyle = "rgba(63,184,166,.18)"; ctx.beginPath();
+    if(kind==="point"){ ctx.moveTo(W,0); ctx.lineTo(W*.55,H*.2); ctx.quadraticCurveTo(W*.2,H*.55,W*.1,H); ctx.lineTo(W,H); }
+    else { ctx.moveTo(W*.15,0); ctx.quadraticCurveTo(W*.45,H*.55,W*.95,H*.75); ctx.lineTo(W,H*.75); ctx.lineTo(W,0); }
+    ctx.fill();
+    // peeling swell lines (lefts peel toward the viewer's right from the surfer's view = left on the chart)
+    for(let i=0;i<4;i++){
+      const off = ((t*14 + i*42) % 168) - 20, y = H*.15 + off;
+      ctx.beginPath();
+      for(let x=0;x<=W;x+=6){
+        const bend = kind==="point" ? Math.pow(x/W,1.6)*-40 : Math.sin(x/W*3.14)*-14;
+        ctx.lineTo(x, y + bend);
+      }
+      ctx.strokeStyle = `rgba(236,230,217,${.15 + i*.08})`; ctx.lineWidth = kind==="barrel" ? 3 : 2; ctx.stroke();
+    }
+    // peel marker
+    const peel = (t*0.18) % 1, px = kind==="point" ? W*(.85 - peel*.6) : W*(.8 - peel*.6);
+    ctx.fillStyle = "#f29b38"; ctx.beginPath(); ctx.arc(px, H*.5, 4, 0, 7); ctx.fill();
+    ctx.fillStyle = "rgba(236,230,217,.55)"; ctx.font = "11px 'JetBrains Mono', monospace";
+    ctx.fillText(kind==="point" ? "POINT · PEELS LONG" : kind==="barrel" ? "HOLLOW · SHALLOW" : "LEFT · REEF SHELF", 12, H-12);
+  }
+  let start = performance.now();
+  function loop(n){ render((n-start)/1000); if(!reduce) requestAnimationFrame(loop); }
+  requestAnimationFrame(loop);
+});
+
+
+/* ---- Save website bookings so they appear in admin.html (same browser) ---- */
+function saveBookingLocally(d){
+  try{
+    const get = k => JSON.parse(localStorage.getItem(k) || "[]");
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+    const contact = d.contact.trim(), isEmail = contact.includes("@");
+    const customers = get("jrf_customers"), norm = v => (v||"").toLowerCase().replace(/[\s-]/g,"");
+    let c = customers.find(x => isEmail ? norm(x.email) === norm(contact) : norm(x.phone) === norm(contact));
+    if(!c){
+      c = {id: uid(), name: d.name.trim(), email: isEmail ? contact : "", phone: isEmail ? "" : contact, country: "", level: d.level, notes: "Added from website booking form", createdAt: Date.now()};
+      customers.push(c); localStorage.setItem("jrf_customers", JSON.stringify(customers));
+    }
+    const bookings = get("jrf_bookings");
+    bookings.push({id: uid(), customerId: c.id, service: d.service, date: d.date, days: +d.days || 1, spot: d.spot, people: +d.people || 1, price: null, status: "New", notes: d.msg.trim(), source: "Website", createdAt: Date.now()});
+    localStorage.setItem("jrf_bookings", JSON.stringify(bookings));
+  }catch(_){ /* storage unavailable: the DM message still works */ }
+}
+
+/* ---- Booking form ---- */
+(function(){
+  const form = document.getElementById("bookForm"), err = document.getElementById("err");
+  const res = document.getElementById("result"), out = document.getElementById("msgOut");
+  const wa = document.getElementById("waBtn"), copyBtn = document.getElementById("copyBtn"), hint = document.getElementById("hint");
+  const dateIn = document.getElementById("f-date");
+  dateIn.min = new Date().toISOString().slice(0,10);
+
+  form.addEventListener("submit", e=>{
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(form));
+    const missing = [];
+    if(!d.name.trim()) missing.push("your name");
+    if(!d.contact.trim()) missing.push("an email or WhatsApp number");
+    if(!d.service) missing.push("a service");
+    if(!d.date) missing.push("a preferred date");
+    if(missing.length){ err.textContent = "Please add " + missing.join(", ") + "."; res.classList.remove("show"); return; }
+    err.textContent = "";
+    const nice = new Date(d.date + "T00:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"long",year:"numeric"});
+    const msg =
+`Hi Java Reef Filmer! I'd like to book a session.
+
+Name: ${d.name.trim()}
+Contact: ${d.contact.trim()}
+Service: ${d.service}
+Date: ${nice} (${d.days || 1} day${(+d.days||1)>1?"s":""})
+Spot: ${d.spot}
+Level: ${d.level}
+People: ${d.people || 1}
+${d.msg.trim() ? "\nNotes: " + d.msg.trim() + "\n" : ""}
+What are your rates and availability? Thanks!`;
+    out.textContent = msg;
+    saveBookingLocally(d);
+    if(WA_NUMBER){
+      wa.href = "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(msg);
+      wa.hidden = false;
+      hint.textContent = "Send it on WhatsApp, or copy it and paste it into the Instagram DM to @blackskin777.";
+    }
+    res.classList.add("show");
+    res.scrollIntoView({behavior: reduce ? "auto" : "smooth", block:"nearest"});
+  });
+
+  copyBtn.addEventListener("click", async ()=>{
+    try{ await navigator.clipboard.writeText(out.textContent); copyBtn.textContent = "Copied"; }
+    catch(_){
+      const r = document.createRange(); r.selectNodeContents(out);
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      copyBtn.textContent = "Selected, press Ctrl/Cmd+C";
+    }
+    setTimeout(()=>copyBtn.textContent = "Copy message", 2200);
+  });
+})();
+</script>
+</body>
+</html>

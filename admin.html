@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Java Reef Admin</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Layout idea: same basalt/reef/wax world as the landing page, run as a calm back-office: sidebar, summary first, tables and a status board. */
+  --basalt:#0a1113; --panel:#0f1a1d; --deep:#12272b; --reef:#3fb8a6; --foam:#ece6d9; --wax:#f29b38;
+  --muted:#8fa5a3; --line:rgba(236,230,217,.12);
+  --ok:#4cc38a; --warn:#e8b13a; --bad:#ff6b5e; --info:#6aa8ff;
+  --f-display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --f-body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--basalt);color:var(--foam);font:400 15px/1.5 var(--f-body);-webkit-font-smoothing:antialiased}
+a{color:var(--reef)}
+h1,h2,h3{font-family:var(--f-display);text-transform:uppercase;line-height:.95;letter-spacing:.01em;text-wrap:balance}
+.mono{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.num{font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--wax);outline-offset:2px}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;border-radius:3px;border:1px solid var(--line);background:transparent;font:600 14px/1 var(--f-body);color:var(--foam);text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:var(--foam)}
+.btn-wax{background:var(--wax);border-color:var(--wax);color:#1a0f02}
+.btn-wax:hover{background:#ffb055;border-color:#ffb055}
+.btn-sm{padding:6px 10px;font-size:13px}
+.btn-danger{color:var(--bad);border-color:rgba(255,107,94,.4)}
+.btn-danger:hover{border-color:var(--bad)}
+.icon-btn{border:0;background:none;padding:6px 8px;border-radius:3px;color:var(--muted);font-size:13px;font-weight:600}
+.icon-btn:hover{background:rgba(236,230,217,.07);color:var(--foam)}
+.icon-btn.del:hover{color:var(--bad)}
+input,select,textarea{width:100%;font:400 15px/1.4 var(--f-body);color:var(--foam);background:var(--basalt);border:1px solid var(--line);border-radius:3px;padding:10px 12px}
+textarea{min-height:80px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--reef)}
+label{display:grid;gap:6px;font:600 12px/1.2 var(--f-body);color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.full{grid-column:1/-1}
+.err{color:var(--bad);font-size:13px}
+
+/* LOGIN */
+.login{min-height:100%;display:grid;grid-template-columns:1.1fr 1fr}
+.login .art{position:relative;background:var(--deep) url("img/hero.jpg") center/cover;display:flex;align-items:flex-end;padding:48px}
+.login .art:before{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(6,12,14,.9),rgba(6,12,14,.2))}
+.login .art div{position:relative}
+.login .art h1{font-size:clamp(48px,6vw,88px);font-weight:900}
+.login .art p{color:rgba(236,230,217,.8);margin-top:10px}
+.login .form{display:grid;place-items:center;padding:32px 20px}
+.login form{width:min(380px,100%);display:grid;gap:16px}
+.login form h2{font-size:44px;font-weight:800}
+.login .note{font-size:13px;color:var(--muted);border-left:2px solid var(--wax);padding-left:10px}
+
+/* APP SHELL */
+.app{display:grid;grid-template-columns:230px 1fr;min-height:100%}
+.side{background:var(--panel);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh}
+.brand{font-family:var(--f-display);font-weight:900;font-size:22px;letter-spacing:.04em;display:flex;align-items:center;gap:8px;padding:0 8px}
+.brand i{width:9px;height:9px;border-radius:50%;background:var(--wax)}
+.side nav{display:grid;gap:2px}
+.side nav a{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:3px;text-decoration:none;color:var(--muted);font-weight:500}
+.side nav a:hover{background:rgba(236,230,217,.05);color:var(--foam)}
+.side nav a.on{background:rgba(63,184,166,.12);color:var(--foam);box-shadow:inset 2px 0 0 var(--reef)}
+.badge{font:600 11px/1 var(--f-mono);background:var(--wax);color:#1a0f02;border-radius:99px;padding:3px 7px}
+.side .me{margin-top:auto;padding:12px;border-top:1px solid var(--line);display:grid;gap:8px;font-size:13px;color:var(--muted)}
+.app>div{min-width:0}
+.main{padding:28px clamp(16px,3vw,40px) 60px;min-width:0}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:24px}
+.top h1{font-size:clamp(40px,5vw,60px);font-weight:800}
+.top .mono{color:var(--wax);display:block;margin-bottom:6px}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.tools input,.tools select{width:auto;min-width:180px;padding:8px 12px}
+
+/* KPI + panels */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+.kpi{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:16px;display:grid;gap:6px}
+.kpi .mono{color:var(--muted)}
+.kpi b{font:800 30px/1 var(--f-display);letter-spacing:.02em}
+.kpi small{color:var(--muted);font-size:12px}
+.kpi.alert{border-color:rgba(255,107,94,.45)}
+.kpi.alert b{color:var(--bad)}
+.panels{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:18px;min-width:0}
+.panel h3{font-size:24px;font-weight:800;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.empty{color:var(--muted);padding:22px 0;text-align:center;font-size:14px}
+.list{display:grid}
+.list .row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center}
+.list .row:last-child{border-bottom:0}
+.list .row small{color:var(--muted);display:block}
+.bars{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;align-items:end;height:170px;padding-top:10px;border-bottom:1px solid var(--line)}
+.bar{min-width:0;display:grid;align-content:end;gap:6px;height:100%;text-align:center}
+.bar i{display:block;background:linear-gradient(180deg,var(--reef),rgba(63,184,166,.35));border-radius:2px 2px 0 0;min-height:2px}
+.bar.cur i{background:linear-gradient(180deg,var(--wax),rgba(242,155,56,.4))}
+.bar span{font:500 10px/1.1 var(--f-mono);color:var(--muted);white-space:nowrap}
+.bar-lbl{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:6px;text-align:center}
+.bar-lbl span{font:500 11px/1 var(--f-mono);color:var(--muted)}
+
+/* TABLE */
+.tablewrap{background:var(--panel);border:1px solid var(--line);border-radius:4px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th{text-align:left;font:600 11px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:13px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:rgba(236,230,217,.03)}
+td small{display:block;color:var(--muted);font-size:12px}
+td.r,th.r{text-align:right}
+td.act{text-align:right;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:6px;font:600 11px/1 var(--f-mono);letter-spacing:.05em;text-transform:uppercase;padding:5px 9px;border-radius:99px;border:1px solid currentColor;white-space:nowrap}
+.pill:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.s-new{color:var(--wax)}.s-confirmed{color:var(--info)}.s-done{color:var(--ok)}.s-cancelled{color:var(--muted)}
+.s-draft{color:var(--muted)}.s-sent{color:var(--info)}.s-partial{color:var(--warn)}.s-overdue{color:var(--bad)}.s-paid{color:var(--ok)}.s-void{color:#6d7c7b}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:none;border-radius:99px;padding:6px 12px;font:500 13px/1 var(--f-body);color:var(--muted)}
+.chip.on{border-color:var(--reef);color:var(--foam);background:rgba(63,184,166,.12)}
+
+/* TRACKER BOARD */
+.aging{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.board{display:grid;grid-template-columns:repeat(5,minmax(220px,1fr));gap:12px;overflow-x:auto;padding-bottom:8px}
+.col{background:var(--panel);border:1px solid var(--line);border-radius:4px;display:flex;flex-direction:column;min-height:240px}
+.col header{padding:14px;border-bottom:1px solid var(--line);display:grid;gap:6px}
+.col header .num{font:800 22px/1 var(--f-display)}
+.col header .cnt{color:var(--muted);font-size:12px}
+.col .cards{padding:10px;display:grid;gap:10px;align-content:start}
+.card{background:var(--basalt);border:1px solid var(--line);border-radius:3px;padding:12px;display:grid;gap:8px;border-left:3px solid var(--c,var(--line))}
+.card .t{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 8px;font-weight:600}
+.card .t span{white-space:nowrap}
+.card .m{color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:8px}
+.card .acts{display:flex;flex-wrap:wrap;gap:4px}
+.progress{height:4px;background:rgba(236,230,217,.08);border-radius:2px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--ok)}
+
+/* MODAL */
+dialog{margin:auto;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--foam);width:min(720px,calc(100% - 24px));max-height:calc(100% - 24px);padding:0}
+dialog::backdrop{background:rgba(3,7,8,.7);backdrop-filter:blur(3px)}
+dialog .mh{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel);z-index:2}
+dialog .mh h2{font-size:30px;font-weight:800}
+dialog .mb{padding:22px;display:grid;gap:14px}
+dialog .mf{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--panel)}
+.items{display:grid;gap:8px}
+.item{display:grid;grid-template-columns:1fr 70px 140px 120px 32px;gap:8px;align-items:center}
+.item .amt{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.totals{display:grid;gap:6px;justify-self:end;min-width:260px}
+.totals div{display:flex;justify-content:space-between;gap:20px}
+.totals .grand{font:800 24px/1 var(--f-display);border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
+
+/* INVOICE PREVIEW (paper) */
+.paper{background:#fbf8f2;color:#14201f;border-radius:4px;padding:36px;display:grid;gap:24px;font-size:14px}
+.paper .ph{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.paper h2{font-size:40px;font-weight:900;color:#14201f}
+.paper .lbl{font:600 10px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:#6c7a78;margin-bottom:6px}
+.paper table{min-width:0}
+.paper th{color:#6c7a78;border-color:#ddd5c6}
+.paper td{border-color:#ece5d8}
+.paper .tot{justify-self:end;min-width:260px;display:grid;gap:6px}
+.paper .tot div{display:flex;justify-content:space-between;gap:20px}
+.paper .tot .g{font:900 26px/1 var(--f-display);border-top:2px solid #14201f;padding-top:10px}
+.paper .stamp{display:inline-block;font:700 12px/1 var(--f-mono);letter-spacing:.1em;padding:6px 10px;border:2px solid;border-radius:3px;text-transform:uppercase}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--foam);color:var(--basalt);padding:10px 16px;border-radius:3px;font-weight:600;z-index:100;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.hide{display:none!important}
+.mobile-nav{display:none}
+
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.panels{grid-template-columns:1fr}.aging{grid-template-columns:1fr 1fr}}
+@media (max-width:820px){
+  .login{grid-template-columns:1fr}.login .art{min-height:220px;padding:24px}
+  .app{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;align-items:center;justify-content:space-between;padding:12px 16px}
+  .side nav,.side .me{display:none}
+  .mobile-nav{display:flex;overflow-x:auto;gap:6px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+  .mobile-nav a{flex:none;padding:8px 12px;border-radius:99px;border:1px solid var(--line);text-decoration:none;color:var(--muted);font-size:13px}
+  .mobile-nav a.on{border-color:var(--reef);color:var(--foam)}
+  .kpis,.aging{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .kpi b{font-size:22px;overflow-wrap:anywhere}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .item{grid-template-columns:1fr 60px 1fr 32px}.item .amt{display:none}
+}
+@media print{
+  body *{visibility:hidden}
+  #printArea,#printArea *{visibility:visible}
+  #printArea{position:absolute;left:0;top:0;width:100%}
+  dialog{border:0;background:#fff}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN / SETUP -->
+<div class="login hide" id="loginView">
+  <div class="art"><div>
+    <span class="mono" style="color:var(--wax)">Back office</span>
+    <h1>Java Reef<br>Filmer</h1>
+    <p>Customers, bookings and invoices in one place.</p>
+  </div></div>
+  <div class="form">
+    <form id="setupForm" class="hide" novalidate>
+      <span class="mono" style="color:var(--wax)">First time here</span>
+      <h2>Create admin account</h2>
+      <label for="su-name">Your name<input id="su-name" autocomplete="name" required></label>
+      <label for="su-user">Username<input id="su-user" autocomplete="username" required></label>
+      <label for="su-pass">Password (min. 6 characters)<input id="su-pass" type="password" autocomplete="new-password" required></label>
+      <label for="su-pass2">Repeat password<input id="su-pass2" type="password" autocomplete="new-password" required></label>
+      <p class="err" id="suErr" role="alert"></p>
+      <button class="btn btn-wax" type="submit">Create account &amp; sign in</button>
+      <p class="note">Data is saved in this browser only (localStorage). Use Account › Backup to move it to another device.</p>
+    </form>
+    <form id="loginForm" class="hide" novalidate>
+      <span class="mono" style="color:var(--wax)">Admin</span>
+      <h2>Sign in</h2>
+      <label for="li-user">Username<input id="li-user" autocomplete="username" required></label>
+      <label for="li-pass">Password<input id="li-pass" type="password" autocomplete="current-password" required></label>
+      <label style="display:flex;align-items:center;gap:8px;font-weight:500"><input id="li-remember" type="checkbox" style="width:auto"> Keep me signed in on this device</label>
+      <p class="err" id="liErr" role="alert"></p>
+      <button class="btn btn-wax" type="submit">Sign in</button>
+      <a href="index.html" style="font-size:13px;color:var(--muted)">← Back to website</a>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app hide" id="appView">
+  <aside class="side">
+    <div class="brand"><i></i>JAVA REEF</div>
+    <nav id="nav"></nav>
+    <div class="me">
+      <span id="meName"></span>
+      <button class="btn btn-sm" id="logoutBtn" type="button">Sign out</button>
+    </div>
+  </aside>
+  <div>
+    <div class="mobile-nav" id="mnav"></div>
+    <main class="main" id="main"></main>
+  </div>
+</div>
+
+<dialog id="modal"></dialog>
+<div class="toast hide" id="toast" role="status"></div>
+
+<script>
+/* =========================================================
+   Storage (localStorage with in-memory fallback)
+   ========================================================= */
+const K = {user:"jrf_admin", cust:"jrf_customers", book:"jrf_bookings", inv:"jrf_invoices", set:"jrf_settings", sess:"jrf_session"};
+const mem = {};
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(_){ return k in mem ? mem[k] : d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(_){ mem[k] = v; } },
+  del(k){ try{ localStorage.removeItem(k); }catch(_){ delete mem[k]; } }
+};
+const db = {
+  get customers(){ return store.get(K.cust, []); }, set customers(v){ store.set(K.cust, v); },
+  get bookings(){ return store.get(K.book, []); },  set bookings(v){ store.set(K.book, v); },
+  get invoices(){ return store.get(K.inv, []); },   set invoices(v){ store.set(K.inv, v); },
+  get settings(){ return Object.assign({business:"Java Reef Filmer", address:"Bali, Indonesia", email:"", phone:"", bank:"", currency:"IDR", prefix:"INV", dueDays:7, taxRate:0}, store.get(K.set, {})); },
+  set settings(v){ store.set(K.set, v); }
+};
+
+/* =========================================================
+   Helpers
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today = () => new Date().toISOString().slice(0,10);
+const addDays = (d, n) => { const x = new Date(d + "T00:00"); x.setDate(x.getDate() + n); return x.toISOString().slice(0,10); };
+const daysBetween = (a, b) => Math.round((new Date(b + "T00:00") - new Date(a + "T00:00")) / 864e5);
+const fmtDate = d => d ? new Date(d + "T00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}) : "—";
+function money(n){
+  const c = db.settings.currency;
+  try{ return new Intl.NumberFormat("en-US",{style:"currency",currency:c,maximumFractionDigits:c==="IDR"?0:2}).format(n||0); }
+  catch(_){ return c + " " + Math.round(n||0).toLocaleString(); }
+}
+function compact(n){ try{ return new Intl.NumberFormat("en-US",{notation:"compact",maximumFractionDigits:1}).format(n); }catch(_){ return Math.round(n).toLocaleString(); } }
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.remove("hide"); clearTimeout(t._t); t._t = setTimeout(()=>t.classList.add("hide"), 2200); }
+async function hash(pw, salt){
+  const data = new TextEncoder().encode(salt + ":" + pw);
+  try{ const b = await crypto.subtle.digest("SHA-256", data); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
+  catch(_){ let h = 5381; for(const c of data) h = ((h<<5) + h + c) >>> 0; return "x" + h.toString(16); }
+}
+const SERVICES = ["Surf videography (water angle)","Surf videography (land angle)","Surf photography","Indo surf trip package","Surf coaching","Car rental","Commercial / advertisement","Wedding film"];
+const SPOTS = ["Let's decide on the forecast","Uluwatu","Padang Padang","Java point breaks","Other"];
+const BSTAT = ["New","Confirmed","Done","Cancelled"];
+const METHODS = ["Bank transfer","Cash","Wise","PayPal","Card"];
+
+/* =========================================================
+   Domain logic
+   ========================================================= */
+const custById = id => db.customers.find(c => c.id === id);
+const custName = id => custById(id)?.name || "Deleted customer";
+function invTotals(inv){
+  const sub = (inv.items||[]).reduce((s,i)=> s + (+i.qty||0)*(+i.price||0), 0);
+  const disc = +inv.discount || 0;
+  const tax = Math.max(0, sub - disc) * (+inv.taxRate||0) / 100;
+  const total = Math.max(0, sub - disc + tax);
+  const paid = (inv.payments||[]).reduce((s,p)=> s + (+p.amount||0), 0);
+  return {sub, disc, tax, total, paid, balance: Math.max(0, total - paid)};
+}
+function invStatus(inv){
+  if(inv.void) return "Void";
+  const t = invTotals(inv);
+  if(t.total > 0 && t.paid >= t.total) return "Paid";
+  if(!inv.sent && t.paid === 0) return "Draft";
+  if(inv.dueDate && inv.dueDate < today()) return "Overdue";
+  if(t.paid > 0) return "Partial";
+  return "Sent";
+}
+const pill = (s) => `<span class="pill s-${s.toLowerCase()}">${esc(s === "Partial" ? "Partly paid" : s)}</span>`;
+function nextInvNumber(){
+  const s = db.settings, y = new Date().getFullYear();
+  const nums = db.invoices.map(i => i.number).filter(n => n && n.startsWith(`${s.prefix}-${y}-`)).map(n => +n.split("-").pop() || 0);
+  return `${s.prefix}-${y}-${String((nums.length ? Math.max(...nums) : 0) + 1).padStart(3,"0")}`;
+}
+
+/* =========================================================
+   Auth
+   ========================================================= */
+function session(){
+  try{ return JSON.parse(sessionStorage.getItem(K.sess)) || store.get(K.sess, null); }catch(_){ return store.get(K.sess, null); }
+}
+function setSession(s, remember){
+  try{ sessionStorage.setItem(K.sess, JSON.stringify(s)); }catch(_){}
+  if(remember) store.set(K.sess, s); else store.del(K.sess);
+}
+function logout(){ try{ sessionStorage.removeItem(K.sess); }catch(_){} store.del(K.sess); boot(); }
+
+$("#setupForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const name = $("#su-name").value.trim(), user = $("#su-user").value.trim().toLowerCase(), p1 = $("#su-pass").value, p2 = $("#su-pass2").value;
+  const err = $("#suErr");
+  if(!name || !user) return err.textContent = "Please fill in your name and a username.";
+  if(p1.length < 6) return err.textContent = "Password needs at least 6 characters.";
+  if(p1 !== p2) return err.textContent = "The two passwords don't match.";
+  const salt = uid();
+  store.set(K.user, {name, user, salt, hash: await hash(p1, salt)});
+  setSession({user, name, at: Date.now()}, false);
+  boot();
+});
+$("#loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const a = store.get(K.user, null), user = $("#li-user").value.trim().toLowerCase(), pw = $("#li-pass").value;
+  if(!a || user !== a.user || (await hash(pw, a.salt)) !== a.hash){ $("#liErr").textContent = "Wrong username or password."; return; }
+  $("#liErr").textContent = "";
+  setSession({user, name: a.name, at: Date.now()}, $("#li-remember").checked);
+  $("#loginForm").reset(); boot();
+});
+$("#logoutBtn").onclick = logout;
+
+/* =========================================================
+   Router + shell
+   ========================================================= */
+const VIEWS = [
+  ["dashboard","Dashboard"],["customers","Customers"],["bookings","Bookings"],["invoices","Invoices"],["tracker","Invoice tracker"],["account","Account"]
+];
+let ui = {q:"", bstat:"All", istat:"All"};
+function route(){ const h = location.hash.slice(1); return VIEWS.some(v=>v[0]===h) ? h : "dashboard"; }
+function renderNav(){
+  const r = route(), newB = db.bookings.filter(b=>b.status==="New").length, over = db.invoices.filter(i=>invStatus(i)==="Overdue").length;
+  const badge = id => id==="bookings" && newB ? `<span class="badge">${newB}</span>` : id==="tracker" && over ? `<span class="badge" style="background:var(--bad);color:#fff">${over}</span>` : "";
+  $("#nav").innerHTML = VIEWS.map(([id,l]) => `<a href="#${id}" class="${r===id?"on":""}">${l}${badge(id)}</a>`).join("");
+  $("#mnav").innerHTML = VIEWS.map(([id,l]) => `<a href="#${id}" class="${r===id?"on":""}">${l}</a>`).join("");
+}
+function render(){
+  if(!session()) return;
+  renderNav();
+  const r = route();
+  ({dashboard:vDashboard, customers:vCustomers, bookings:vBookings, invoices:vInvoices, tracker:vTracker, account:vAccount})[r]();
+}
+addEventListener("hashchange", ()=>{ ui.q=""; closeModal(); render(); });
+function boot(){
+  const s = session(), hasUser = !!store.get(K.user, null);
+  $("#loginView").classList.toggle("hide", !!s);
+  $("#appView").classList.toggle("hide", !s);
+  $("#setupForm").classList.toggle("hide", hasUser);
+  $("#loginForm").classList.toggle("hide", !hasUser);
+  if(s){ $("#meName").textContent = "Signed in as " + s.name; render(); }
+}
+function head(eyebrow, title, tools=""){ return `<div class="top"><div><span class="mono">${eyebrow}</span><h1>${title}</h1></div><div class="tools">${tools}</div></div>`; }
+const searchBox = ph => `<input type="search" id="q" placeholder="${ph}" value="${esc(ui.q)}" aria-label="Search">`;
+function bindSearch(){ const q = $("#q"); if(q) q.oninput = () => { ui.q = q.value; const pos = q.selectionStart; render(); const n = $("#q"); n.focus(); n.setSelectionRange(pos,pos); }; }
+
+/* =========================================================
+   Dashboard
+   ========================================================= */
+function vDashboard(){
+  const B = db.bookings, I = db.invoices, t = today();
+  const upcoming = B.filter(b => b.date >= t && b.date <= addDays(t,14) && b.status !== "Cancelled").sort((a,b)=>a.date.localeCompare(b.date));
+  const newB = B.filter(b => b.status === "New");
+  let outstanding = 0, overdue = 0; const overList = [];
+  I.forEach(i => { const s = invStatus(i), tt = invTotals(i); if(["Sent","Partial","Overdue"].includes(s)) outstanding += tt.balance; if(s==="Overdue"){ overdue += tt.balance; overList.push(i); } });
+  const ym = t.slice(0,7);
+  const pays = I.flatMap(i => (i.payments||[]));
+  const thisMonth = pays.filter(p => (p.date||"").startsWith(ym)).reduce((s,p)=>s+(+p.amount||0),0);
+  // last 6 months revenue
+  const months = [...Array(6)].map((_,k)=>{ const d = new Date(); d.setDate(1); d.setMonth(d.getMonth()-5+k); return d.toISOString().slice(0,7); });
+  const rev = months.map(m => pays.filter(p => (p.date||"").startsWith(m)).reduce((s,p)=>s+(+p.amount||0),0));
+  const max = Math.max(1, ...rev);
+  $("#main").innerHTML = head("Overview", "Dashboard", `<button class="btn" data-a="newBooking">+ Booking</button><button class="btn btn-wax" data-a="newInvoice">+ Invoice</button>`) + `
+  <div class="kpis">
+    <div class="kpi"><span class="mono">New bookings</span><b class="num">${newB.length}</b><small>Waiting for your reply</small></div>
+    <div class="kpi"><span class="mono">Next 14 days</span><b class="num">${upcoming.length}</b><small>Sessions scheduled</small></div>
+    <div class="kpi"><span class="mono">Paid this month</span><b class="num">${money(thisMonth)}</b><small>${new Date().toLocaleDateString("en-GB",{month:"long"})}</small></div>
+    <div class="kpi"><span class="mono">Outstanding</span><b class="num">${money(outstanding)}</b><small>Sent, not fully paid</small></div>
+    <div class="kpi ${overdue?"alert":""}"><span class="mono">Overdue</span><b class="num">${money(overdue)}</b><small>${overList.length} invoice${overList.length===1?"":"s"} past due</small></div>
+  </div>
+  <div class="panels">
+    <div class="panel"><h3>Upcoming sessions <a class="btn btn-sm" href="#bookings">All bookings</a></h3>
+      ${upcoming.length ? `<div class="list">${upcoming.slice(0,8).map(b=>`<div class="row"><div><b>${esc(custName(b.customerId))}</b><small>${esc(b.service)} · ${esc(b.spot||"")}</small></div><div style="text-align:right"><span class="num">${fmtDate(b.date)}</span><small>${pill(b.status)}</small></div></div>`).join("")}</div>` : `<p class="empty">No sessions in the next 14 days.</p>`}
+    </div>
+    <div class="panel"><h3>Revenue, last 6 months</h3>
+      <div class="bars">${rev.map((v,k)=>`<div class="bar ${k===5?"cur":""}" title="${money(v)}"><span class="num">${v?compact(v):""}</span><i style="height:${Math.round(v/max*120)}px"></i></div>`).join("")}</div>
+      <div class="bar-lbl">${months.map(m=>`<span>${new Date(m+"-01T00:00").toLocaleDateString("en-GB",{month:"short"})}</span>`).join("")}</div>
+      <h3 style="margin-top:22px">Overdue invoices <a class="btn btn-sm" href="#tracker">Tracker</a></h3>
+      ${overList.length ? `<div class="list">${overList.map(i=>`<div class="row"><div><b>${esc(i.number)}</b><small>${esc(custName(i.customerId))} · ${daysBetween(i.dueDate,t)} days late</small></div><b class="num" style="color:var(--bad)">${money(invTotals(i).balance)}</b></div>`).join("")}</div>` : `<p class="empty">Nothing overdue.</p>`}
+    </div>
+  </div>
+  ${!B.length && !db.customers.length ? `<div class="panel" style="margin-top:16px"><h3>Start here</h3><p style="color:var(--muted);margin-bottom:12px">Bookings sent from the website's form show up here automatically when the site and this admin run in the same browser. You can also add data by hand, or load example data to try everything out.</p><button class="btn" data-a="seed">Load example data</button></div>`:""}`;
+}
+
+/* =========================================================
+   Customers
+   ========================================================= */
+function vCustomers(){
+  const q = ui.q.toLowerCase(), B = db.bookings, I = db.invoices;
+  const list = db.customers.filter(c => !q || [c.name,c.email,c.phone,c.country].join(" ").toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name));
+  $("#main").innerHTML = head("People", "Customers", searchBox("Search name, email, phone…") + `<button class="btn btn-wax" data-a="newCustomer">+ Customer</button>`) +
+  (list.length ? `<div class="tablewrap"><table><thead><tr><th>Name</th><th>Contact</th><th>Country</th><th class="r">Bookings</th><th class="r">Unpaid</th><th></th></tr></thead><tbody>
+  ${list.map(c => { const nb = B.filter(b=>b.customerId===c.id).length; const due = I.filter(i=>i.customerId===c.id && !["Draft","Void"].includes(invStatus(i))).reduce((s,i)=>s+invTotals(i).balance,0);
+    return `<tr><td><b>${esc(c.name)}</b>${c.notes?`<small>${esc(c.notes.slice(0,60))}</small>`:""}</td><td>${esc(c.email||"—")}<small>${esc(c.phone||"")}</small></td><td>${esc(c.country||"—")}</td><td class="r num">${nb}</td><td class="r num" style="${due?"color:var(--warn)":""}">${due?money(due):"—"}</td>
+    <td class="act"><button class="icon-btn" data-a="bookFor" data-id="${c.id}">+ Booking</button><button class="icon-btn" data-a="editCustomer" data-id="${c.id}">Edit</button><button class="icon-btn del" data-a="delCustomer" data-id="${c.id}">Delete</button></td></tr>`; }).join("")}
+  </tbody></table></div>` : `<div class="panel"><p class="empty">${q ? "No customers match your search." : "No customers yet. Add one, or they'll be created from website bookings."}</p></div>`);
+  bindSearch();
+}
+function customerForm(c = {}){
+  openModal(c.id ? "Edit customer" : "New customer", `
+    <div class="grid2">
+      <label class="full" for="c-name">Full name<input id="c-name" value="${esc(c.name)}" required></label>
+      <label for="c-email">Email<input id="c-email" type="email" value="${esc(c.email)}"></label>
+      <label for="c-phone">WhatsApp / phone<input id="c-phone" value="${esc(c.phone)}"></label>
+      <label for="c-country">Country<input id="c-country" value="${esc(c.country)}"></label>
+      <label for="c-level">Surf level<select id="c-level">${["","Beginner","Intermediate","Advanced","Pro"].map(l=>`<option ${c.level===l?"selected":""}>${l}</option>`).join("")}</select></label>
+      <label class="full" for="c-notes">Notes<textarea id="c-notes">${esc(c.notes)}</textarea></label>
+    </div><p class="err" id="mErr"></p>`, () => {
+      const name = $("#c-name").value.trim(); if(!name){ $("#mErr").textContent = "Name is required."; return false; }
+      const rec = {...c, id: c.id || uid(), name, email: $("#c-email").value.trim(), phone: $("#c-phone").value.trim(), country: $("#c-country").value.trim(), level: $("#c-level").value, notes: $("#c-notes").value.trim(), createdAt: c.createdAt || Date.now()};
+      const all = db.customers, k = all.findIndex(x=>x.id===rec.id); k>=0 ? all[k]=rec : all.push(rec); db.customers = all;
+      toast(c.id ? "Customer updated" : "Customer added"); return rec;
+    });
+}
+
+/* =========================================================
+   Bookings
+   ========================================================= */
+function vBookings(){
+  const q = ui.q.toLowerCase();
+  let list = db.bookings.filter(b => ui.bstat==="All" || b.status===ui.bstat)
+    .filter(b => !q || [custName(b.customerId), b.service, b.spot, b.notes].join(" ").toLowerCase().includes(q))
+    .sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+  const counts = Object.fromEntries(BSTAT.map(s=>[s, db.bookings.filter(b=>b.status===s).length]));
+  $("#main").innerHTML = head("Sessions", "Bookings", searchBox("Search customer, service, spot…") + `<button class="btn btn-wax" data-a="newBooking">+ Booking</button>`) +
+  `<div class="chips" style="margin-bottom:14px">${["All",...BSTAT].map(s=>`<button class="chip ${ui.bstat===s?"on":""}" data-a="bfilter" data-id="${s}">${s}${s!=="All"?` · ${counts[s]}`:""}</button>`).join("")}</div>` +
+  (list.length ? `<div class="tablewrap"><table><thead><tr><th>Date</th><th>Customer</th><th>Service</th><th>Spot</th><th class="r">People</th><th class="r">Price</th><th>Status</th><th></th></tr></thead><tbody>
+  ${list.map(b => { const inv = db.invoices.find(i=>i.bookingId===b.id);
+    return `<tr><td class="num">${fmtDate(b.date)}<small>${b.days>1?b.days+" days":"1 day"}</small></td><td><b>${esc(custName(b.customerId))}</b>${b.source==="Website"?`<small>From website</small>`:""}</td><td>${esc(b.service)}</td><td>${esc(b.spot||"—")}</td><td class="r num">${b.people||1}</td><td class="r num">${b.price?money(b.price):"—"}</td>
+    <td>${pill(b.status)}</td><td class="act">${inv?`<button class="icon-btn" data-a="viewInvoice" data-id="${inv.id}">${esc(inv.number)}</button>`:`<button class="icon-btn" data-a="invFromBooking" data-id="${b.id}">Invoice</button>`}<button class="icon-btn" data-a="editBooking" data-id="${b.id}">Edit</button><button class="icon-btn del" data-a="delBooking" data-id="${b.id}">Delete</button></td></tr>`; }).join("")}
+  </tbody></table></div>` : `<div class="panel"><p class="empty">No bookings ${ui.bstat!=="All"?`with status “${ui.bstat}”`:"yet"}.</p></div>`);
+  bindSearch();
+}
+function customerOptions(sel){
+  const cs = db.customers.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  return `<option value="">Choose a customer</option>` + cs.map(c=>`<option value="${c.id}" ${c.id===sel?"selected":""}>${esc(c.name)}</option>`).join("") + `<option value="__new">+ New customer…</option>`;
+}
+function bindNewCustomerOption(selId, reopen){
+  $(selId).onchange = e => { if(e.target.value === "__new"){ const snap = reopen(); customerForm(); modalAfter = rec => { snap.customerId = rec ? rec.id : ""; reopenFn(snap); }; } };
+}
+let modalAfter = null, reopenFn = null;
+function bookingForm(b = {}){
+  b = {days:1, people:1, status:"New", date: today(), ...b};
+  reopenFn = bookingForm;
+  openModal(b.id ? "Edit booking" : "New booking", `
+    <div class="grid2">
+      <label class="full" for="b-cust">Customer<select id="b-cust">${customerOptions(b.customerId)}</select></label>
+      <label class="full" for="b-service">Service<select id="b-service">${SERVICES.map(s=>`<option ${b.service===s?"selected":""}>${s}</option>`).join("")}</select></label>
+      <label for="b-date">Date<input id="b-date" type="date" value="${esc(b.date)}"></label>
+      <label for="b-days">Days<input id="b-days" type="number" min="1" value="${b.days}"></label>
+      <label for="b-spot">Spot<select id="b-spot">${SPOTS.map(s=>`<option ${b.spot===s?"selected":""}>${s}</option>`).join("")}</select></label>
+      <label for="b-people">People<input id="b-people" type="number" min="1" value="${b.people}"></label>
+      <label for="b-price">Price (${db.settings.currency})<input id="b-price" type="number" min="0" step="any" value="${b.price??""}"></label>
+      <label for="b-status">Status<select id="b-status">${BSTAT.map(s=>`<option ${b.status===s?"selected":""}>${s}</option>`).join("")}</select></label>
+      <label class="full" for="b-notes">Notes<textarea id="b-notes">${esc(b.notes)}</textarea></label>
+    </div><p class="err" id="mErr"></p>`, () => {
+      const cid = $("#b-cust").value; if(!cid || cid==="__new"){ $("#mErr").textContent = "Choose a customer."; return false; }
+      if(!$("#b-date").value){ $("#mErr").textContent = "Pick a date."; return false; }
+      const rec = {...b, id: b.id || uid(), customerId: cid, service: $("#b-service").value, date: $("#b-date").value, days: +$("#b-days").value||1, spot: $("#b-spot").value, people: +$("#b-people").value||1, price: $("#b-price").value===""?null:+$("#b-price").value, status: $("#b-status").value, notes: $("#b-notes").value.trim(), createdAt: b.createdAt || Date.now(), source: b.source || "Admin"};
+      const all = db.bookings, k = all.findIndex(x=>x.id===rec.id); k>=0 ? all[k]=rec : all.push(rec); db.bookings = all;
+      toast(b.id ? "Booking updated" : "Booking added"); return rec;
+    });
+  const snapshot = () => ({...b, customerId: $("#b-cust").value, service: $("#b-service").value, date: $("#b-date").value, days: +$("#b-days").value, spot: $("#b-spot").value, people: +$("#b-people").value, price: $("#b-price").value===""?null:+$("#b-price").value, status: $("#b-status").value, notes: $("#b-notes").value});
+  bindNewCustomerOption("#b-cust", snapshot);
+}
+
+/* =========================================================
+   Invoices
+   ========================================================= */
+function vInvoices(){
+  const q = ui.q.toLowerCase(), STAT = ["All","Draft","Sent","Partial","Overdue","Paid","Void"];
+  const list = db.invoices.filter(i => ui.istat==="All" || invStatus(i)===ui.istat)
+    .filter(i => !q || [i.number, custName(i.customerId)].join(" ").toLowerCase().includes(q))
+    .sort((a,b)=> (b.issueDate||"").localeCompare(a.issueDate||"") || b.number.localeCompare(a.number));
+  $("#main").innerHTML = head("Billing", "Invoices", searchBox("Search number or customer…") + `<button class="btn btn-wax" data-a="newInvoice">+ Invoice</button>`) +
+  `<div class="chips" style="margin-bottom:14px">${STAT.map(s=>`<button class="chip ${ui.istat===s?"on":""}" data-a="ifilter" data-id="${s}">${s==="Partial"?"Partly paid":s}</button>`).join("")}</div>` +
+  (list.length ? `<div class="tablewrap"><table><thead><tr><th>Number</th><th>Customer</th><th>Issued</th><th>Due</th><th class="r">Total</th><th class="r">Balance</th><th>Status</th><th></th></tr></thead><tbody>
+  ${list.map(i => { const t = invTotals(i), s = invStatus(i);
+    return `<tr><td><b class="num">${esc(i.number)}</b></td><td>${esc(custName(i.customerId))}</td><td class="num">${fmtDate(i.issueDate)}</td><td class="num">${fmtDate(i.dueDate)}</td><td class="r num">${money(t.total)}</td><td class="r num">${t.balance && s!=="Void"?money(t.balance):"—"}</td><td>${pill(s)}</td>
+    <td class="act"><button class="icon-btn" data-a="viewInvoice" data-id="${i.id}">View</button>${!["Paid","Void"].includes(s)?`<button class="icon-btn" data-a="payInvoice" data-id="${i.id}">Payment</button>`:""}<button class="icon-btn" data-a="editInvoice" data-id="${i.id}">Edit</button><button class="icon-btn del" data-a="delInvoice" data-id="${i.id}">Delete</button></td></tr>`; }).join("")}
+  </tbody></table></div>` : `<div class="panel"><p class="empty">No invoices ${ui.istat!=="All"?"with this status":"yet"}.</p></div>`);
+  bindSearch();
+}
+function invoiceForm(inv = {}){
+  const s = db.settings;
+  inv = {number: nextInvNumber(), issueDate: today(), dueDate: addDays(today(), +s.dueDays||7), items:[{desc:"",qty:1,price:0}], discount:0, taxRate:+s.taxRate||0, payments:[], sent:false, ...inv};
+  inv.items = JSON.parse(JSON.stringify(inv.items));
+  reopenFn = invoiceForm;
+  const bookings = db.bookings.filter(b => !inv.customerId || b.customerId===inv.customerId);
+  openModal(inv.id ? "Edit invoice" : "New invoice", `
+    <div class="grid3">
+      <label for="i-num">Invoice number<input id="i-num" value="${esc(inv.number)}"></label>
+      <label for="i-issue">Issue date<input id="i-issue" type="date" value="${esc(inv.issueDate)}"></label>
+      <label for="i-due">Due date<input id="i-due" type="date" value="${esc(inv.dueDate)}"></label>
+      <label class="full" for="i-cust" style="grid-column:1/3">Customer<select id="i-cust">${customerOptions(inv.customerId)}</select></label>
+      <label for="i-book">Booking (optional)<select id="i-book"><option value="">None</option>${bookings.map(b=>`<option value="${b.id}" ${b.id===inv.bookingId?"selected":""}>${fmtDate(b.date)} · ${esc(b.service)}</option>`).join("")}</select></label>
+    </div>
+    <div><span class="mono" style="color:var(--muted)">Items</span>
+      <div class="items" id="items" style="margin-top:8px"></div>
+      <button class="btn btn-sm" type="button" id="addItem" style="margin-top:8px">+ Add line</button>
+    </div>
+    <div class="grid3">
+      <label for="i-disc">Discount (${s.currency})<input id="i-disc" type="number" min="0" step="any" value="${inv.discount||0}"></label>
+      <label for="i-tax">Tax %<input id="i-tax" type="number" min="0" step="any" value="${inv.taxRate||0}"></label>
+      <label for="i-sent" style="align-content:end"><span style="display:flex;gap:8px;align-items:center;font-weight:500;color:var(--foam);padding:10px 0"><input id="i-sent" type="checkbox" style="width:auto" ${inv.sent?"checked":""}> Sent to customer</span></label>
+      <label class="full" for="i-notes">Notes on invoice<textarea id="i-notes" placeholder="Payment instructions, thank-you note…">${esc(inv.notes)}</textarea></label>
+    </div>
+    <div class="totals" id="totals"></div>
+    <p class="err" id="mErr"></p>`, () => {
+      const cid = $("#i-cust").value; if(!cid || cid==="__new"){ $("#mErr").textContent = "Choose a customer."; return false; }
+      readItems(); const items = inv.items.filter(it => it.desc.trim() || +it.price);
+      if(!items.length){ $("#mErr").textContent = "Add at least one line item."; return false; }
+      const num = $("#i-num").value.trim(); if(!num){ $("#mErr").textContent = "Invoice number is required."; return false; }
+      if(db.invoices.some(x => x.number === num && x.id !== inv.id)){ $("#mErr").textContent = "That invoice number is already used."; return false; }
+      const rec = {...inv, id: inv.id || uid(), number: num, issueDate: $("#i-issue").value, dueDate: $("#i-due").value, customerId: cid, bookingId: $("#i-book").value || null, items, discount: +$("#i-disc").value||0, taxRate: +$("#i-tax").value||0, sent: $("#i-sent").checked, notes: $("#i-notes").value.trim(), createdAt: inv.createdAt || Date.now()};
+      const all = db.invoices, k = all.findIndex(x=>x.id===rec.id); k>=0 ? all[k]=rec : all.push(rec); db.invoices = all;
+      toast(inv.id ? "Invoice updated" : "Invoice created"); return rec;
+    }, "wide");
+  function drawItems(){
+    $("#items").innerHTML = inv.items.map((it,k)=>`<div class="item">
+      <input aria-label="Description" data-f="desc" data-k="${k}" value="${esc(it.desc)}" placeholder="Description, e.g. Surf session filming – water angle">
+      <input aria-label="Quantity" data-f="qty" data-k="${k}" type="number" min="0" step="any" value="${it.qty}">
+      <input aria-label="Unit price" data-f="price" data-k="${k}" type="number" min="0" step="any" value="${it.price}">
+      <span class="amt">${money((+it.qty||0)*(+it.price||0))}</span>
+      <button type="button" class="icon-btn del" data-rm="${k}" aria-label="Remove line">✕</button></div>`).join("");
+    drawTotals();
+  }
+  function readItems(){ document.querySelectorAll("#items [data-f]").forEach(el => { const it = inv.items[+el.dataset.k]; it[el.dataset.f] = el.dataset.f==="desc" ? el.value : +el.value; }); }
+  function drawTotals(){
+    readItems(); inv.discount = +$("#i-disc").value||0; inv.taxRate = +$("#i-tax").value||0;
+    document.querySelectorAll("#items .item").forEach((row,k)=>{ const it = inv.items[k]; row.querySelector(".amt").textContent = money((+it.qty||0)*(+it.price||0)); });
+    const t = invTotals(inv);
+    $("#totals").innerHTML = `<div><span>Subtotal</span><span class="num">${money(t.sub)}</span></div>${t.disc?`<div><span>Discount</span><span class="num">−${money(t.disc)}</span></div>`:""}${t.tax?`<div><span>Tax ${inv.taxRate}%</span><span class="num">${money(t.tax)}</span></div>`:""}${t.paid?`<div><span>Paid</span><span class="num">−${money(t.paid)}</span></div>`:""}<div class="grand"><span>Total</span><span class="num">${money(t.total)}</span></div>`;
+  }
+  drawItems();
+  $("#items").addEventListener("input", drawTotals);
+  $("#items").addEventListener("click", e => { const k = e.target.dataset.rm; if(k!==undefined){ readItems(); inv.items.splice(+k,1); if(!inv.items.length) inv.items.push({desc:"",qty:1,price:0}); drawItems(); } });
+  $("#addItem").onclick = () => { readItems(); inv.items.push({desc:"",qty:1,price:0}); drawItems(); $("#items .item:last-child input").focus(); };
+  $("#i-disc").oninput = $("#i-tax").oninput = drawTotals;
+  const snapshot = () => { readItems(); return {...inv, number:$("#i-num").value, issueDate:$("#i-issue").value, dueDate:$("#i-due").value, customerId:$("#i-cust").value, bookingId:$("#i-book").value, discount:+$("#i-disc").value, taxRate:+$("#i-tax").value, sent:$("#i-sent").checked, notes:$("#i-notes").value}; };
+  $("#i-cust").addEventListener("change", e => { if(e.target.value !== "__new"){ const snap = snapshot(); snap.bookingId = null; invoiceForm(snap); } });
+  bindNewCustomerOption("#i-cust", snapshot);
+}
+function invoiceFromBooking(b){
+  const days = b.days || 1, desc = `${b.service} – ${b.spot && !b.spot.startsWith("Let's") ? b.spot + ", " : ""}${fmtDate(b.date)}${days>1?` (${days} days)`:""}`;
+  invoiceForm({customerId: b.customerId, bookingId: b.id, items: [{desc, qty: 1, price: b.price || 0}]});
+}
+function paymentForm(inv){
+  const t = invTotals(inv);
+  openModal(`Record payment · ${inv.number}`, `
+    <p style="color:var(--muted)">${esc(custName(inv.customerId))} · Balance <b class="num" style="color:var(--foam)">${money(t.balance)}</b> of ${money(t.total)}</p>
+    <div class="grid2">
+      <label for="p-amt">Amount (${db.settings.currency})<input id="p-amt" type="number" min="0" step="any" value="${t.balance}"></label>
+      <label for="p-date">Date<input id="p-date" type="date" value="${today()}"></label>
+      <label for="p-method">Method<select id="p-method">${METHODS.map(m=>`<option>${m}</option>`).join("")}</select></label>
+      <label for="p-ref">Reference<input id="p-ref" placeholder="Transfer ref, receipt no."></label>
+    </div>
+    ${(inv.payments||[]).length ? `<div><span class="mono" style="color:var(--muted)">Previous payments</span><div class="list">${inv.payments.map(p=>`<div class="row"><div>${fmtDate(p.date)}<small>${esc(p.method)}${p.ref?" · "+esc(p.ref):""}</small></div><span style="display:flex;gap:8px;align-items:center"><b class="num">${money(p.amount)}</b><button type="button" class="icon-btn del" data-rmpay="${p.id}">Remove</button></span></div>`).join("")}</div></div>`:""}
+    <p class="err" id="mErr"></p>`, () => {
+      const amt = +$("#p-amt").value; if(!(amt > 0)){ $("#mErr").textContent = "Enter an amount above zero."; return false; }
+      const all = db.invoices, k = all.findIndex(x=>x.id===inv.id);
+      all[k].payments = [...(all[k].payments||[]), {id: uid(), amount: amt, date: $("#p-date").value || today(), method: $("#p-method").value, ref: $("#p-ref").value.trim()}];
+      all[k].sent = true; db.invoices = all;
+      toast(invStatus(all[k])==="Paid" ? "Paid in full" : "Payment recorded"); return true;
+    });
+  $("#modal").querySelectorAll("[data-rmpay]").forEach(btn => btn.onclick = () => {
+    const all = db.invoices, k = all.findIndex(x=>x.id===inv.id);
+    all[k].payments = all[k].payments.filter(p => p.id !== btn.dataset.rmpay); db.invoices = all;
+    closeModal(); render(); paymentForm(all[k]); toast("Payment removed");
+  });
+}
+function invoicePreview(inv){
+  const s = db.settings, c = custById(inv.customerId) || {}, t = invTotals(inv), st = invStatus(inv);
+  const stampColor = {Paid:"#1f8a55",Overdue:"#c4372a",Partial:"#b07a10",Void:"#777",Draft:"#777",Sent:"#2a5fae"}[st];
+  openModal(inv.number, `<div id="printArea"><div class="paper">
+    <div class="ph"><div><h2>Invoice</h2><div class="num" style="margin-top:6px">${esc(inv.number)}</div></div>
+      <div style="text-align:right"><b>${esc(s.business)}</b><div>${esc(s.address)}</div><div>${esc(s.email)}</div><div>${esc(s.phone)}</div></div></div>
+    <div class="ph"><div><div class="lbl">Bill to</div><b>${esc(c.name||"—")}</b><div>${esc(c.email||"")}</div><div>${esc(c.phone||"")}</div><div>${esc(c.country||"")}</div></div>
+      <div style="text-align:right"><div class="lbl">Issued</div><div>${fmtDate(inv.issueDate)}</div><div class="lbl" style="margin-top:10px">Due</div><div>${fmtDate(inv.dueDate)}</div><div style="margin-top:12px"><span class="stamp" style="color:${stampColor}">${st==="Partial"?"Partly paid":st}</span></div></div></div>
+    <table><thead><tr><th>Description</th><th class="r">Qty</th><th class="r">Price</th><th class="r">Amount</th></tr></thead><tbody>
+      ${inv.items.map(it=>`<tr><td>${esc(it.desc)}</td><td class="r num">${it.qty}</td><td class="r num">${money(it.price)}</td><td class="r num">${money(it.qty*it.price)}</td></tr>`).join("")}
+    </tbody></table>
+    <div class="tot"><div><span>Subtotal</span><span class="num">${money(t.sub)}</span></div>${t.disc?`<div><span>Discount</span><span class="num">−${money(t.disc)}</span></div>`:""}${t.tax?`<div><span>Tax ${inv.taxRate}%</span><span class="num">${money(t.tax)}</span></div>`:""}<div class="g"><span>Total</span><span class="num">${money(t.total)}</span></div>${t.paid?`<div><span>Paid</span><span class="num">−${money(t.paid)}</span></div><div><b>Balance due</b><b class="num">${money(t.balance)}</b></div>`:""}</div>
+    ${s.bank||inv.notes?`<div style="display:grid;gap:12px">${s.bank?`<div><div class="lbl">Payment details</div><div style="white-space:pre-line">${esc(s.bank)}</div></div>`:""}${inv.notes?`<div><div class="lbl">Notes</div><div style="white-space:pre-line">${esc(inv.notes)}</div></div>`:""}</div>`:""}
+  </div></div>`, null, "wide", `<button class="btn" type="button" id="cpInv">Copy as text</button><button class="btn" type="button" id="prInv">Print / Save PDF</button>${!inv.sent && st!=="Void"?`<button class="btn" type="button" id="sentInv">Mark as sent</button>`:""}`);
+  $("#prInv").onclick = () => { try{ window.print(); }catch(_){ toast("Printing isn't available here. Open admin.html in your browser to print."); } };
+  $("#cpInv").onclick = async () => {
+    const txt = `INVOICE ${inv.number}\n${s.business}\n\nBill to: ${c.name||""}\nIssued: ${fmtDate(inv.issueDate)}  Due: ${fmtDate(inv.dueDate)}\n\n${inv.items.map(it=>`- ${it.desc}  ${it.qty} x ${money(it.price)} = ${money(it.qty*it.price)}`).join("\n")}\n\nTotal: ${money(t.total)}${t.paid?`\nPaid: ${money(t.paid)}\nBalance due: ${money(t.balance)}`:""}${s.bank?`\n\nPayment details:\n${s.bank}`:""}`;
+    try{ await navigator.clipboard.writeText(txt); toast("Invoice copied — paste it into WhatsApp or email"); }catch(_){ toast("Copy was blocked by the browser"); }
+  };
+  const sb = $("#sentInv"); if(sb) sb.onclick = () => { const all = db.invoices, k = all.findIndex(x=>x.id===inv.id); all[k].sent = true; db.invoices = all; closeModal(); render(); toast("Marked as sent"); };
+}
+
+/* =========================================================
+   Invoice tracker (board)
+   ========================================================= */
+function vTracker(){
+  const t = today(), COLS = [["Draft","var(--muted)"],["Sent","var(--info)"],["Partial","var(--warn)"],["Overdue","var(--bad)"],["Paid","var(--ok)"]];
+  const live = db.invoices.filter(i => invStatus(i) !== "Void");
+  const aging = {cur:0, a:0, b:0, c:0};
+  live.forEach(i => { const s = invStatus(i), bal = invTotals(i).balance; if(!["Sent","Partial","Overdue"].includes(s)) return;
+    if(s !== "Overdue") aging.cur += bal; else { const d = daysBetween(i.dueDate, t); d<=30 ? aging.a+=bal : d<=60 ? aging.b+=bal : aging.c+=bal; } });
+  const paidRecent = i => { const last = (i.payments||[]).map(p=>p.date).sort().pop(); return last && daysBetween(last, t) <= 30; };
+  $("#main").innerHTML = head("Follow the money", "Invoice tracker", `<button class="btn btn-wax" data-a="newInvoice">+ Invoice</button>`) + `
+  <div class="aging">
+    <div class="kpi"><span class="mono">Not yet due</span><b class="num">${money(aging.cur)}</b></div>
+    <div class="kpi ${aging.a?"alert":""}"><span class="mono">1–30 days late</span><b class="num">${money(aging.a)}</b></div>
+    <div class="kpi ${aging.b?"alert":""}"><span class="mono">31–60 days late</span><b class="num">${money(aging.b)}</b></div>
+    <div class="kpi ${aging.c?"alert":""}"><span class="mono">60+ days late</span><b class="num">${money(aging.c)}</b></div>
+  </div>
+  <div class="board">${COLS.map(([s,c]) => {
+    let items = live.filter(i => invStatus(i) === s);
+    if(s === "Paid") items = items.filter(paidRecent);
+    const sum = items.reduce((a,i)=> a + (s==="Paid" ? invTotals(i).total : s==="Draft" ? invTotals(i).total : invTotals(i).balance), 0);
+    items.sort((a,b)=>(a.dueDate||"").localeCompare(b.dueDate||""));
+    return `<section class="col"><header><span class="pill s-${s.toLowerCase()}" style="justify-self:start">${s==="Partial"?"Partly paid":s}</span><span class="num">${money(sum)}</span><span class="cnt">${items.length} invoice${items.length===1?"":"s"}${s==="Paid"?" · last 30 days":""}</span></header>
+      <div class="cards">${items.map(i => { const tt = invTotals(i), d = i.dueDate ? daysBetween(t, i.dueDate) : null;
+        const when = s==="Paid" ? `Paid ${fmtDate((i.payments||[]).map(p=>p.date).sort().pop())}` : d===null ? "No due date" : d<0 ? `${-d} days overdue` : d===0 ? "Due today" : `Due in ${d} days`;
+        return `<article class="card" style="--c:${c}"><div class="t"><span class="num">${esc(i.number)}</span><span class="num">${money(s==="Paid"||s==="Draft"?tt.total:tt.balance)}</span></div>
+          <div class="m"><span>${esc(custName(i.customerId))}</span><span style="${d<0&&s!=="Paid"?"color:var(--bad)":""}">${when}</span></div>
+          ${tt.paid && s!=="Paid" ? `<div class="progress" title="${Math.round(tt.paid/tt.total*100)}% paid"><i style="width:${Math.min(100,tt.paid/tt.total*100)}%"></i></div>`:""}
+          <div class="acts"><button class="icon-btn" data-a="viewInvoice" data-id="${i.id}">View</button>${s==="Draft"?`<button class="icon-btn" data-a="markSent" data-id="${i.id}">Mark sent</button>`:""}${s!=="Paid"&&s!=="Draft"?`<button class="icon-btn" data-a="payInvoice" data-id="${i.id}">Payment</button>`:""}${s==="Overdue"?`<button class="icon-btn" data-a="remind" data-id="${i.id}">Copy reminder</button>`:""}</div></article>`; }).join("") || `<p class="empty" style="padding:12px 0">Empty</p>`}</div></section>`; }).join("")}
+  </div>`;
+}
+
+/* =========================================================
+   Account / settings / backup
+   ========================================================= */
+function vAccount(){
+  const s = db.settings, a = store.get(K.user, {});
+  $("#main").innerHTML = head("Admin", "Account", `<button class="btn" data-a="logout">Sign out</button>`) + `
+  <div class="panels">
+    <form class="panel" id="setForm" style="display:grid;gap:14px"><h3>Business details</h3>
+      <div class="grid2">
+        <label class="full" for="s-bus">Business name<input id="s-bus" value="${esc(s.business)}"></label>
+        <label class="full" for="s-addr">Address<input id="s-addr" value="${esc(s.address)}"></label>
+        <label for="s-email">Email<input id="s-email" value="${esc(s.email)}"></label>
+        <label for="s-phone">Phone / WhatsApp<input id="s-phone" value="${esc(s.phone)}"></label>
+        <label for="s-cur">Currency<select id="s-cur">${["IDR","USD","AUD","EUR"].map(c=>`<option ${s.currency===c?"selected":""}>${c}</option>`).join("")}</select></label>
+        <label for="s-prefix">Invoice prefix<input id="s-prefix" value="${esc(s.prefix)}"></label>
+        <label for="s-due">Default payment term (days)<input id="s-due" type="number" min="0" value="${s.dueDays}"></label>
+        <label for="s-tax">Default tax %<input id="s-tax" type="number" min="0" step="any" value="${s.taxRate}"></label>
+        <label class="full" for="s-bank">Payment details shown on invoices<textarea id="s-bank" placeholder="Bank name, account name, account number…">${esc(s.bank)}</textarea></label>
+      </div>
+      <button class="btn btn-wax" type="submit" style="justify-self:start">Save details</button>
+    </form>
+    <div style="display:grid;gap:16px;align-content:start">
+      <form class="panel" id="pwForm" style="display:grid;gap:12px"><h3>Change password</h3>
+        <p style="color:var(--muted);font-size:13px">Signed in as <b>${esc(a.user)}</b></p>
+        <label for="pw-old">Current password<input id="pw-old" type="password" autocomplete="current-password"></label>
+        <label for="pw-new">New password<input id="pw-new" type="password" autocomplete="new-password"></label>
+        <p class="err" id="pwErr"></p>
+        <button class="btn" type="submit" style="justify-self:start">Update password</button>
+      </form>
+      <div class="panel" style="display:grid;gap:12px"><h3>Backup &amp; data</h3>
+        <p style="color:var(--muted);font-size:13px">${db.customers.length} customers · ${db.bookings.length} bookings · ${db.invoices.length} invoices, stored in this browser.</p>
+        <div class="tools"><button class="btn" data-a="exportDl">Download backup</button><button class="btn" data-a="exportCopy">Copy backup</button><button class="btn" data-a="import">Restore backup</button></div>
+        <div class="tools"><button class="btn" data-a="seed">Load example data</button><button class="btn btn-danger" data-a="wipe">Delete all data</button></div>
+      </div>
+    </div>
+  </div>`;
+  $("#setForm").onsubmit = e => { e.preventDefault(); db.settings = {...s, business:$("#s-bus").value.trim(), address:$("#s-addr").value.trim(), email:$("#s-email").value.trim(), phone:$("#s-phone").value.trim(), currency:$("#s-cur").value, prefix:($("#s-prefix").value.trim()||"INV").toUpperCase(), dueDays:+$("#s-due").value||0, taxRate:+$("#s-tax").value||0, bank:$("#s-bank").value.trim()}; toast("Details saved"); render(); };
+  $("#pwForm").onsubmit = async e => { e.preventDefault(); const acc = store.get(K.user,{}); const err = $("#pwErr");
+    if((await hash($("#pw-old").value, acc.salt)) !== acc.hash) return err.textContent = "Current password is wrong.";
+    if($("#pw-new").value.length < 6) return err.textContent = "New password needs at least 6 characters.";
+    acc.salt = uid(); acc.hash = await hash($("#pw-new").value, acc.salt); store.set(K.user, acc); err.textContent = ""; e.target.reset(); toast("Password updated"); };
+}
+function backupJSON(){ return JSON.stringify({app:"java-reef-admin", version:1, exportedAt:new Date().toISOString(), settings:db.settings, customers:db.customers, bookings:db.bookings, invoices:db.invoices}, null, 2); }
+
+/* =========================================================
+   Modal + confirm
+   ========================================================= */
+function openModal(title, body, onSave, size, extra=""){
+  const m = $("#modal");
+  m.style.width = size==="wide" ? "min(860px,calc(100% - 24px))" : "";
+  m.innerHTML = `<form method="dialog" id="mForm" novalidate><div class="mh"><h2>${esc(title)}</h2><button type="button" class="icon-btn" data-close aria-label="Close">✕</button></div><div class="mb">${body}</div><div class="mf">${extra}<button type="button" class="btn" data-close>${onSave?"Cancel":"Close"}</button>${onSave?`<button class="btn btn-wax" type="submit">Save</button>`:""}</div></form>`;
+  m.querySelectorAll("[data-close]").forEach(b => b.onclick = closeModal);
+  $("#mForm").onsubmit = e => { e.preventDefault(); if(!onSave) return closeModal(); const r = onSave(); if(r === false) return; const after = modalAfter; modalAfter = null; closeModal(); if(after) after(r); else render(); };
+  if(!m.open) m.showModal();
+  const f = m.querySelector(".mb input:not([type=checkbox]),.mb select"); if(f) f.focus();
+}
+function closeModal(){ const m = $("#modal"); if(m.open) m.close(); }
+$("#modal").addEventListener("close", ()=>{ if(modalAfter){ const a = modalAfter; modalAfter = null; a(null); } });
+function confirmBox(title, msg, okLabel, onOk){
+  openModal(title, `<p>${msg}</p>`, null, null, `<button class="btn btn-danger" type="button" id="okBtn">${esc(okLabel)}</button>`);
+  $("#okBtn").onclick = () => { closeModal(); onOk(); render(); };
+}
+
+/* =========================================================
+   Actions
+   ========================================================= */
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-a]"); if(!el) return;
+  const a = el.dataset.a, id = el.dataset.id;
+  const inv = id && db.invoices.find(i=>i.id===id), bk = id && db.bookings.find(b=>b.id===id), cu = id && db.customers.find(c=>c.id===id);
+  switch(a){
+    case "newCustomer": customerForm(); break;
+    case "editCustomer": customerForm(cu); break;
+    case "delCustomer": {
+      const nb = db.bookings.filter(b=>b.customerId===id).length, ni = db.invoices.filter(i=>i.customerId===id).length;
+      confirmBox("Delete customer?", `<b>${esc(cu.name)}</b> will be removed.${nb||ni?` Their ${nb} booking(s) and ${ni} invoice(s) stay, marked “Deleted customer”.`:""}`, "Delete customer", ()=>{ db.customers = db.customers.filter(c=>c.id!==id); toast("Customer deleted"); });
+      break; }
+    case "bookFor": bookingForm({customerId:id}); break;
+    case "newBooking": bookingForm(); break;
+    case "editBooking": bookingForm(bk); break;
+    case "delBooking": confirmBox("Delete booking?", `The ${esc(bk.service)} booking on ${fmtDate(bk.date)} for <b>${esc(custName(bk.customerId))}</b> will be removed. Invoices made from it are kept.`, "Delete booking", ()=>{ db.bookings = db.bookings.filter(b=>b.id!==id); toast("Booking deleted"); }); break;
+    case "bfilter": ui.bstat = id; render(); break;
+    case "ifilter": ui.istat = id; render(); break;
+    case "invFromBooking": invoiceFromBooking(bk); break;
+    case "newInvoice": invoiceForm(); break;
+    case "editInvoice": invoiceForm(inv); break;
+    case "viewInvoice": invoicePreview(inv); break;
+    case "payInvoice": paymentForm(inv); break;
+    case "markSent": { const all = db.invoices; all.find(i=>i.id===id).sent = true; db.invoices = all; toast("Marked as sent"); render(); break; }
+    case "delInvoice": confirmBox("Delete invoice?", `Invoice <b>${esc(inv.number)}</b> and its payment records will be removed. This can't be undone.`, "Delete invoice", ()=>{ db.invoices = db.invoices.filter(i=>i.id!==id); toast("Invoice deleted"); }); break;
+    case "remind": {
+      const t = invTotals(inv), c = custById(inv.customerId)||{};
+      const txt = `Hi ${c.name?c.name.split(" ")[0]:"there"}, a friendly reminder that invoice ${inv.number} (${money(t.balance)}) was due on ${fmtDate(inv.dueDate)}.${db.settings.bank?`\n\nPayment details:\n${db.settings.bank}`:""}\n\nThank you!\n${db.settings.business}`;
+      navigator.clipboard.writeText(txt).then(()=>toast("Reminder copied"), ()=>toast("Copy was blocked by the browser")); break; }
+    case "exportDl": {
+      try{ const b = new Blob([backupJSON()],{type:"application/json"}); const u = URL.createObjectURL(b); const l = document.createElement("a"); l.href = u; l.download = `java-reef-backup-${today()}.json`; document.body.appendChild(l); l.click(); l.remove(); setTimeout(()=>URL.revokeObjectURL(u), 1000); toast("Backup downloaded"); }
+      catch(_){ toast("Download blocked here. Use Copy backup instead."); } break; }
+    case "exportCopy": navigator.clipboard.writeText(backupJSON()).then(()=>toast("Backup copied to clipboard"), ()=>toast("Copy was blocked by the browser")); break;
+    case "import":
+      openModal("Restore backup", `<p style="color:var(--muted)">Choose a backup file or paste its contents. This replaces the customers, bookings, invoices and business details in this browser.</p><label for="imp-file">Backup file<input id="imp-file" type="file" accept=".json,application/json"></label><label for="imp">Or paste backup<textarea id="imp" style="min-height:160px;font-family:var(--f-mono);font-size:12px"></textarea></label><p class="err" id="mErr"></p>`, () => {
+        try{ const d = JSON.parse($("#imp").value); if(!Array.isArray(d.customers)||!Array.isArray(d.bookings)||!Array.isArray(d.invoices)) throw 0;
+          db.customers = d.customers; db.bookings = d.bookings; db.invoices = d.invoices; if(d.settings) db.settings = d.settings; toast("Backup restored"); return true; }
+        catch(_){ $("#mErr").textContent = "That doesn't look like a Java Reef backup. Check you pasted the whole file."; return false; } });
+      $("#imp-file").onchange = async ev => { const f = ev.target.files[0]; if(f) $("#imp").value = await f.text(); };
+      break;
+    case "seed": seed(); break;
+    case "logout": logout(); break;
+    case "wipe": confirmBox("Delete all data?", "All customers, bookings and invoices in this browser will be deleted. Your admin login stays. Download a backup first if you might need them.", "Delete everything", ()=>{ db.customers = []; db.bookings = []; db.invoices = []; toast("All data deleted"); }); break;
+  }
+});
+
+/* =========================================================
+   Example data
+   ========================================================= */
+function seed(){
+  const t = today(), C = [
+    {name:"Liam Carter", email:"liam.carter@example.com", phone:"+61 412 000 111", country:"Australia", level:"Advanced"},
+    {name:"Sofia Mendes", email:"sofia.m@example.com", phone:"+351 910 000 222", country:"Portugal", level:"Intermediate"},
+    {name:"Kenji Watanabe", email:"kenji.w@example.com", phone:"+81 90 0000 3333", country:"Japan", level:"Pro"},
+    {name:"Emma & Noah", email:"emma.noah@example.com", phone:"+44 7700 000444", country:"United Kingdom", level:""},
+    {name:"Bali Board Co.", email:"hello@example.com", phone:"+62 812 0000 555", country:"Indonesia", level:""}
+  ].map(c => ({...c, id: uid(), notes:"Example data", createdAt: Date.now()}));
+  const rate = db.settings.currency==="IDR" ? 1 : 1/16000;
+  const p = n => Math.round(n*rate*100)/100;
+  const B = [
+    [0,"Surf videography (water angle)","Uluwatu", 3, 1, 1500000, "Confirmed"],
+    [1,"Indo surf trip package","Java point breaks", 10, 7, 18500000, "Confirmed"],
+    [2,"Surf videography (land angle)","Padang Padang", -12, 1, 1200000, "Done"],
+    [3,"Wedding film","Other", 21, 1, 25000000, "New"],
+    [4,"Commercial / advertisement","Uluwatu", -40, 2, 30000000, "Done"],
+    [1,"Surf coaching","Let's decide on the forecast", 1, 3, 2400000, "New"],
+    [0,"Surf photography","Padang Padang", -25, 1, 900000, "Done"]
+  ].map(([ci,service,spot,off,days,price,status]) => ({id:uid(), customerId:C[ci].id, service, spot, date:addDays(t,off), days, people: ci===3?2:1, price:p(price), status, notes:"", source: status==="New"?"Website":"Admin", createdAt:Date.now()}));
+  const y = new Date().getFullYear(), pre = db.settings.prefix;
+  const mk = (n, b, issueOff, dueOff, sent, pays) => ({id:uid(), number:`${pre}-${y}-${String(n).padStart(3,"0")}`, customerId:b.customerId, bookingId:b.id, issueDate:addDays(t,issueOff), dueDate:addDays(t,dueOff), items:[{desc:`${b.service} – ${b.spot}`, qty:1, price:b.price}], discount:0, taxRate:0, sent, notes:"", payments: pays.map(([a,o])=>({id:uid(), amount:p(a), date:addDays(t,o), method:"Bank transfer", ref:""})), createdAt:Date.now()});
+  const I = [
+    mk(5, B[4], -45, -38, true, [[30000000,-36]]),
+    mk(6, B[2], -12, -5, true, []),
+    mk(7, B[6], -25, -18, true, [[900000,-20]]),
+    mk(8, B[1], -3, 4, true, [[9250000,-2]]),
+    mk(9, B[0], 0, 7, false, [])
+  ];
+  // earlier months' revenue for the chart
+  [[-150,4000000],[-120,6500000],[-90,3200000],[-60,8800000]].forEach(([o,a],k) => {
+    I.push({id:uid(), number:`${pre}-${y}-${String(1+k).padStart(3,"0")}`, customerId:C[k%3].id, bookingId:null, issueDate:addDays(t,o-5), dueDate:addDays(t,o+2), items:[{desc:"Surf session filming", qty:1, price:p(a)}], discount:0, taxRate:0, sent:true, notes:"", payments:[{id:uid(), amount:p(a), date:addDays(t,o), method:"Cash", ref:""}], createdAt:Date.now()});
+  });
+  db.customers = [...db.customers, ...C]; db.bookings = [...db.bookings, ...B]; db.invoices = [...db.invoices, ...I];
+  toast("Example data loaded"); render();
+}
+
+/* keep in sync when the website form adds a booking in another tab */
+addEventListener("storage", e => { if([K.book,K.cust].includes(e.key) && session()) render(); });
+boot();
+</script>
+</body>
+</html>
